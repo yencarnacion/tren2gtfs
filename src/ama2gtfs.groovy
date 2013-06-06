@@ -12,6 +12,7 @@
  /********/
  stops = []
  sagrado_corazon = new Stop(
+          codeName: "sagrado_corazon",
           stopId: "16",
           stopCode: "",
           stopName: "Sagrado Coraz\u00F3n",
@@ -27,6 +28,7 @@
   )
 
 hato_rey = new Stop(
+        codeName: "hato_rey",
         stopId: "15",
         stopCode: "",
         stopName: "Hato Rey",
@@ -42,6 +44,7 @@ hato_rey = new Stop(
 )
 
 roosevelt = new Stop(
+        codeName: "roosevelt",
         stopId: "14",
         stopCode: "",
         stopName: "Roosevelt",
@@ -57,6 +60,7 @@ roosevelt = new Stop(
 )
 
 domenech = new Stop(
+        codeName: "domenech",
         stopId: "13",
         stopCode: "",
         stopName: "D\u00F3menech",
@@ -72,6 +76,7 @@ domenech = new Stop(
 )
 
 pinero = new Stop(
+        codeName: "pinero",
         stopId: "12",
         stopCode: "",
         stopName: "Pi\u00F1ero",
@@ -87,6 +92,7 @@ pinero = new Stop(
 )
 
 universidad = new Stop(
+        codeName: "universidad",
         stopId: "11",
         stopCode: "",
         stopName: "Universidad",
@@ -102,6 +108,7 @@ universidad = new Stop(
 )
 
 rio_piedras = new Stop (
+        codeName: "rio_piedras",
         stopId: "10",
         stopCode: "",
         stopName: "Cupey",
@@ -116,6 +123,7 @@ rio_piedras = new Stop (
         wheelchairBoarding: ""
 )
 cupey = new Stop (
+        codeName: "cupey",
         stopId: "9",
         stopCode: "",
         stopName: "R\u00EDo Piedras",
@@ -131,9 +139,10 @@ cupey = new Stop (
 )
 
 centro_medico = new Stop (
+        codeName: "centro_medico",
         stopId: "8",
         stopCode: "",
-        stopName: "Centro M\u009dico",
+        stopName: "Centro M\u00E9dico",
         stopDesc: "",
         stopLat:"-66.075734D",
         stopLon: "18.393167D",
@@ -146,6 +155,7 @@ centro_medico = new Stop (
 )
 
 san_francisco = new Stop (
+        codeName: "san_francisco",
         stopId: "7",
         stopCode: "",
         stopName: "San Francisco",
@@ -161,6 +171,7 @@ san_francisco = new Stop (
 )
 
 las_lomas = new Stop (
+        codeName: "las_lomas",
         stopId: "6",
         stopCode: "",
         stopName: "Las Lomas",
@@ -176,6 +187,7 @@ las_lomas = new Stop (
 )
 
 martinez_nadal = new Stop (
+        codeName: "martinez_nadal",
         stopId: "5",
         stopCode: "",
         stopName: "Mart\u00EDnez Nadal",
@@ -191,6 +203,7 @@ martinez_nadal = new Stop (
 )
 
 torrimar = new Stop (
+        codeName: "torrimar",
         stopId: "4",
         stopCode: "",
         stopName: "Torrimar",
@@ -207,6 +220,7 @@ torrimar = new Stop (
 
 
 jardines = new Stop (
+        codeName: "jardines",
         stopId: "3",
         stopCode: "",
         stopName: "Jardines",
@@ -222,6 +236,7 @@ jardines = new Stop (
 )
 
 deportivo = new Stop (
+        codeName: "deportivo",
         stopId: "2",
         stopCode: "",
         stopName: "Deportivo",
@@ -237,6 +252,7 @@ deportivo = new Stop (
 )
 
 bayamon = new Stop (
+        codeName: "bayamon",
         stopId: "1",
         stopCode: "",
         stopName: "Bayam\u00F3n",
@@ -268,11 +284,27 @@ stops << sagrado_corazon
     stops << deportivo
     stops << bayamon
 
+routeTrenUrbano = new Route (
+    routeId: "RUTA_TREN",
+    agencyId: agency_id,
+    routeShortName: "",
+    routeLongName: "Ruta del Tren Urbano",
+    routeDesc: "Ruta del Tren Urbano de Puerto Rico",
+    routeType: "1",
+    routeUrl: "www.dtop.gov.pr",
+    routecolor: "",
+    routeTextColor: ""
+)
 
- file =  'trainschedule.csv'
+routes = []
+routes << routeTrenUrbano
+
+ trainScheduleCsv =  'trainschedule.csv'
 
  agencyFileName = "agency.txt"
  stopsFileName = "stops.txt"
+ routesFileName = "routes.txt"
+ tripsFileName = "trips.txt"
 
 
 agency = new Agency(agencyId: agency_id,
@@ -284,6 +316,10 @@ agency = new Agency(agencyId: agency_id,
                     agencyFareUrl: agency_fare_url)
 createAgencyTxt(agency)
 createStopsTxt(stops)
+createRoutesTxt(routes)
+createTripsTxt()
+
+
 
 def createAgencyTxt(def agency){
     def agencyTxt = new File(agencyFileName)
@@ -323,6 +359,97 @@ def createStopsTxt(def stops){
 
 }
 
+def createRoutesTxt(def routes){
+    def routesTxt = new File (routesFileName)
+    routesTxt.newWriter()
+    routesTxt << ("route_id,route_short_name,route_long_name,route_desc,route_type") << "\r\n"
+    routes.each { route ->
+        routesTxt << (route.routeId?route.routeId+",":",")
+        routesTxt << (route.agencyId?route.agencyId+",":",")
+        routesTxt << (route.routeShortName?route.routeShortName+",":",")
+        routesTxt << (route.routeLongName?route.routeLongName+",":",")
+        routesTxt << (route.routeDesc?route.routeDesc+",":",")
+        routesTxt << (route.routeType?route.routeType+",":",")
+        routesTxt << (route.routeUrl?route.routeUrl+",":",")
+        routesTxt << (route.routecolor?route.routecolor+",":",")
+        routesTxt << (route.routeTextColor?route.routeTextColor+",":",") << "\r\n"
+    }
+
+}
+
+/*
+    route_id,service_id,trip_id,trip_headsign,trip_short_name,direction_id,block_id,shape_id,wheelchair_accessible
+RUTA_TREN,LOW_SEASON_WORKDAY,RTLSW1,"to Airport",0
+ */
+
+Stop getStopFromNumber(int i){
+    stops.find{stop -> if(stop.stopId == "${i}") return stop}
+}
+
+def createTripsTxt(){
+    def printTrip = {theFile, trip ->
+        theFile << trip.route_id+","
+        theFile << trip.service_id+","
+        theFile << trip.trip_id+","
+        theFile << trip.trip_headsign+","
+        theFile << trip.trip_short_name+","
+        theFile << trip.direction_id+","
+        theFile << trip.shape_id+","
+        theFile << trip.wheelchair_accessible+","
+        theFile << "\r\n"
+
+    }
+
+    def trips = []
+
+    int count = 0;
+    for(int startId=1; startId<= stops.size(); startId++){
+        Stop theStart = getStopFromNumber(startId)
+        if(startId < stops.size()){
+            for (int stopId=startId+1; stopId<=stops.size(); stopId++){
+                Stop theStop = getStopFromNumber(stopId)
+                Trip trip = new Trip();
+                trip.route_id = ((Route) routes[0]).routeId
+                trip.service_id = "LOW_SEASON_WORKDAY"
+                trip.trip_id = "${++count}"
+                trip.trip_headsign = theStop.stopName
+                trip.trip_short_name = "${theStart.stopName} / ${theStop.stopName}"
+                trip.direction_id = "0"
+                trip.block_id = ""
+                trip.shape_id = ""
+                trip.wheelchair_accessible = ""
+                trips << trip
+            }
+        }
+        if(startId > 1){
+            for (int stopId = startId -1; stopId >=1; stopId--){
+                Stop theStop = getStopFromNumber(stopId)
+                Trip trip = new Trip();
+                trip.route_id = ((Route) routes[0]).routeId
+                trip.service_id = "LOW_SEASON_WORKDAY"
+                trip.trip_id = "${++count}"
+                trip.trip_headsign = theStop.stopName
+                trip.trip_short_name = "${theStart.stopName} / ${theStop.stopName}"
+                trip.direction_id = "1"
+                trip.block_id = ""
+                trip.shape_id = ""
+                trip.wheelchair_accessible = ""
+                trips << trip
+            }
+        }
+    }
+
+    def tripsTxt = new File (tripsFileName)
+    tripsTxt.newWriter()
+
+    tripsTxt << ("route_id,service_id,trip_id,trip_headsign,trip_short_name,direction_id,block_id,shape_id,wheelchair_accessible") << '\r\n'
+
+    for(Trip t: trips){
+        printTrip.call(tripsTxt,t)
+    }
+}
+
+
 class Agency {
     String agencyId
     String agencyName
@@ -334,6 +461,7 @@ class Agency {
 }
 
 class Stop {
+    String codeName
     String stopId
     String stopCode
     String stopName
@@ -346,4 +474,28 @@ class Stop {
     String parentStation
     String stopTimezone
     String wheelchairBoarding
+}
+
+class Route {
+    String routeId
+    String agencyId
+    String routeShortName
+    String routeLongName
+    String routeDesc
+    String routeType
+    String routeUrl
+    String routecolor
+    String routeTextColor
+}
+
+class Trip {
+    String route_id
+    String service_id
+    String trip_id
+    String trip_headsign
+    String trip_short_name
+    String direction_id
+    String block_id
+    String shape_id
+    String wheelchair_accessible
 }
