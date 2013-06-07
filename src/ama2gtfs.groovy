@@ -1,6 +1,7 @@
 /**
  * Created by yamir on 6/6/13.
  */
+@Grab( 'net.sourceforge.nekohtml:nekohtml:1.9.18' )
 
  agency_id = 'TREN'
  agency_name = 'Tren Urbano'
@@ -299,12 +300,12 @@ routeTrenUrbano = new Route (
 routes = []
 routes << routeTrenUrbano
 
- trainScheduleCsv =  'trainschedule.csv'
+ trainScheduleFileName =  '../resources/trainschedule.csv'
 
- agencyFileName = "agency.txt"
- stopsFileName = "stops.txt"
- routesFileName = "routes.txt"
- tripsFileName = "trips.txt"
+ agencyFileName = "../resources/agency.txt"
+ stopsFileName = "../resources/stops.txt"
+ routesFileName = "../resources/routes.txt"
+ tripsFileName = "../resources/trips.txt"
 
 
 agency = new Agency(agencyId: agency_id,
@@ -318,7 +319,8 @@ createAgencyTxt(agency)
 createStopsTxt(stops)
 createRoutesTxt(routes)
 createTripsTxt()
-
+//readTrainScheduleFile()
+readTrainScheduleWebsite()
 
 
 def createAgencyTxt(def agency){
@@ -376,11 +378,6 @@ def createRoutesTxt(def routes){
     }
 
 }
-
-/*
-    route_id,service_id,trip_id,trip_headsign,trip_short_name,direction_id,block_id,shape_id,wheelchair_accessible
-RUTA_TREN,LOW_SEASON_WORKDAY,RTLSW1,"to Airport",0
- */
 
 Stop getStopFromNumber(int i){
     stops.find{stop -> if(stop.stopId == "${i}") return stop}
@@ -449,7 +446,102 @@ def createTripsTxt(){
     }
 }
 
+def readTrainScheduleFile() {
 
+    def trainScheduleFile = new File (trainScheduleFileName)
+    def trainArrivals = []
+
+    trainScheduleFile.eachLine { line ->
+        line = line.replace("\"","")
+        def (arrivesTo, direction, daytipe, arrivalTime) = line.split(",")
+        TrainArrival trainArrival = new TrainArrival(
+            arrivesTo: arrivesTo,
+            direction: direction,
+            daytipe: daytipe,
+            arrivalTime: arrivalTime
+        )
+        trainArrivals << trainArrival
+    }
+
+    /*for (TrainArrival t: trainArrivals){
+        println t.dump();
+    }*/
+
+}
+
+
+def readTrainScheduleWebsite(){
+    def trainScheduleUrlFrom = {direction, departStationId -> "http://tempo7.praxisinteractive.net/dtopweb/itinerario/departure.php?st_id=${direction}&pl_id=${departStationId}"}
+    def trainScheduleUrlDeparting = {direction, departStationId, trainId -> "http://tempo7.praxisinteractive.net/dtopweb/itinerario/plataforma2.php?st_id=${direction}&pl_id=${departStationId}&train_id=${trainId}"}
+    def trainScheduleUrlArrivalTime = {direction, departStationId, trainId, arriveStationId -> "http://tempo7.praxisinteractive.net/dtopweb/itinerario/arrival.php?st_id=${direction}&pl_id=${departStationId}&train_id=${trainId}&pl_id2=${arriveStationId}" }
+
+    WebConnectService webConnectService = new WebConnectService()
+    def directions = ["1"]
+    for (String direction: directions) {
+        for(Stop stop:stops){
+            println stop.stopName+" : "
+            def pageWithDepartingTimes = webConnectService.doGetConnection(new URL(trainScheduleUrlFrom.call(direction, stop.stopId)), "")
+            def page = AmaXmlParserFactory.getXmlParser().parseText(pageWithDepartingTimes.webpage);
+
+            def departTimes = page.depthFirst().getAt('OPTION')
+
+            int count = 0;
+
+            def departTimesList = []
+            departTimes.each{time ->
+                if(count == 0){
+                    count++
+                    return null
+                }
+                departTimesList << [trainId: time.depthFirst()[0]."@value", departureTime: time.value()[0] ]
+                println "departTime:"+time.depthFirst()[0]."@value" + "|" + time.value()[0]
+            }
+
+            departTimesList.each { departTime ->
+                println stops.size()
+                println stop.stopId
+                Boolean doNotContinue = false;
+
+                    //println trainScheduleUrlDeparting.call(direction, stop.stopId, departTime['trainId'])
+                def pageWithArrivalStationText = webConnectService.doGetConnection(new URL(trainScheduleUrlDeparting.call(direction, stop.stopId, departTime['trainId'])), "")
+
+                println pageWithArrivalStationText
+                def pageWithArrivalStationXml = AmaXmlParserFactory.getXmlParser().parseText(pageWithArrivalStationText.webpage);
+                def arrivalStations = pageWithArrivalStationXml.depthFirst().getAt('OPTION')
+
+                def arrivalStationsList = []
+                int countArrivalStations = 0
+                arrivalStations.each{ arrivalStation ->
+                    if(countArrivalStations == 0){
+                        countArrivalStations++
+                        return null
+                    }
+                    //def station = arrivalStation.depthFirst()[0].value()[0]
+                    //if(station != "[ Seleccione ]"){
+                        def arrivalStationMap = [station: arrivalStation.depthFirst()[0].value()[0], value: arrivalStation.depthFirst()[0].@"value"]
+                        arrivalStationsList << arrivalStationMap
+                        println arrivalStationMap
+                        println arrivalStationMap.station +" | "+arrivalStationMap.value
+                        //}
+                }
+
+                arrivalStationsList.each { arrivalStation ->
+                   println trainScheduleUrlArrivalTime.call(direction, stop.stopId, departTime['trainId'], arrivalStation.value)
+                   def pageWithArrivalTimeText = webConnectService.doGetConnection(new URL(
+                           trainScheduleUrlArrivalTime.call(direction, stop.stopId, departTime['trainId'], arrivalStation.value)
+                        ), "")
+                    //def pageWithArrivalTimeXml = AmaXmlParserFactory.getXmlParser().parseText(pageWithArrivalTimeText.webpage);
+                    //def arrivalTime = pageWithArrivalTimeXml.depthFirst()
+                    println "*****Arrival Time:"+ pageWithArrivalTimeText.webpage+"*****\n"
+
+                }
+                    //arrivalStation.each
+
+            }
+
+        }
+    }
+}
 class Agency {
     String agencyId
     String agencyName
@@ -498,4 +590,152 @@ class Trip {
     String block_id
     String shape_id
     String wheelchair_accessible
+}
+
+class TrainArrival {
+    String arrivesTo
+    String direction
+    String daytipe
+    String arrivalTime
+}
+
+class WebConnectService {
+
+    final String connectionUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_1) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.89 Safari/537.1 (compatible; loteria_pr_bot; +http://www.webninjapr.com/)";
+    final String connectionAccept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+    final String connectionAcceptLanguage = "en-US,en;q=0.8";
+    final String connectionAcceptCharset = "ISO-8859-1,utf-8;q=0.7,*;q=0.3";
+    final String connectionContentType = "application/x-www-form-urlencoded";
+
+    def doPostConnection(URL url, String requestParameters, ArrayList<String> cookies){
+        DataOutputStream wr;
+        HttpURLConnection connectionPost;
+        //System.setProperty("http.agent", "");
+        def webpage=null
+        def retCookies=null
+        try {
+            connectionPost = url.openConnection();
+            connectionPost.setConnectTimeout(10000)
+            connectionPost.setRequestMethod("POST");
+            connectionPost.setDoOutput(true);
+            connectionPost.setDoInput(true);
+            connectionPost.setRequestProperty("User-Agent", connectionUserAgent);
+            connectionPost.setRequestProperty("Accept", connectionAccept);
+            //connectionPost.setRequestProperty(Accept-Encoding:gzip,deflate,sdch)
+            connectionPost.setRequestProperty("Accept-Language",connectionAcceptLanguage);
+            connectionPost.setRequestProperty("Accept-Charset", connectionAcceptCharset);
+            //connectionPost.setRequestProperty(java.net.URLEncoder.encode("Cache-Control", "ISO-8859-1"),java.net.URLEncoder.encode("max-age=0", "ISO-8859-1"));
+            connectionPost.setRequestProperty("Content-Type", connectionContentType);
+            if(cookies && cookies.size()>0){
+                connectionPost.setRequestProperty("Cookie", cookies.join("; "));
+            }
+            connectionPost.setRequestProperty("Content-Length",requestParameters.getBytes().length.toString());
+
+            connectionPost.connect();
+            //Send request
+            wr = new DataOutputStream (
+                    connectionPost.getOutputStream ());
+            wr.writeBytes (requestParameters);
+            wr.flush ();
+
+            //From http://www.hccp.org/java-net-cookie-how-to.html
+            String headerName=null;
+            ArrayList<String> returnCookies = [];
+            for (int i=1; (headerName = connectionPost.getHeaderFieldKey(i))!=null; i++) {
+                if (headerName.equals("Set-Cookie")) {
+                    String cookie = connectionPost.getHeaderField(i);
+
+                    def cookieCutter = cookie.split(";\\s?")
+
+                    returnCookies.addAll(cookieCutter);
+                    //String cookieName = cookie.substring(0, cookie.indexOf("="));
+                    //String cookieValue = cookie.substring(cookie.indexOf("=") + 1, cookie.length());
+                }
+            }
+
+            webpage = connectionPost.content.text
+            retCookies = returnCookies
+        } catch (e){
+            log.error(e); //throw new Exception(e);
+        } finally {
+            if(wr){
+                wr.close ();
+            }
+            if(connectionPost){
+                connectionPost.disconnect();
+            }
+            return [webpage: webpage, cookies: retCookies];
+        }
+    }
+
+    def doGetConnection(URL url, String requestParameters){
+        DataOutputStream wr;
+        HttpURLConnection connectionGet;
+        //System.setProperty("http.agent", "");
+        def webpage = null
+        def cookies = null
+        try {
+            connectionGet = url.openConnection();
+            connectionGet.setConnectTimeout(10000)
+            connectionGet.setRequestMethod("GET");
+            connectionGet.setDoOutput(false);
+            connectionGet.setDoInput(true);
+            connectionGet.setRequestProperty("User-Agent", connectionUserAgent);
+            connectionGet.setRequestProperty("Accept", connectionAccept);
+            //connectionGet.setRequestProperty(Accept-Encoding:gzip,deflate,sdch)
+            connectionGet.setRequestProperty("Accept-Language",connectionAcceptLanguage);
+            connectionGet.setRequestProperty("Accept-Charset", connectionAcceptCharset);
+            //connectionGet.setRequestProperty(java.net.URLEncoder.encode("Cache-Control", "ISO-8859-1"),java.net.URLEncoder.encode("max-age=0", "ISO-8859-1"));
+            connectionGet.setRequestProperty("Content-Type", connectionContentType);
+            connectionGet.setRequestProperty("Content-Length",requestParameters.getBytes().length.toString());
+
+            connectionGet.connect();
+
+            //From http://www.hccp.org/java-net-cookie-how-to.html
+            String headerName=null;
+            ArrayList<String> returnCookies = [];
+            for (int i=1; (headerName = connectionGet.getHeaderFieldKey(i))!=null; i++) {
+                if (headerName.equals("Set-Cookie")) {
+                    String cookie = connectionGet.getHeaderField(i);
+
+                    def cookieCutter = cookie.split(";\\s?")
+
+                    returnCookies.addAll(cookieCutter);
+                    //String cookieName = cookie.substring(0, cookie.indexOf("="));
+                    //String cookieValue = cookie.substring(cookie.indexOf("=") + 1, cookie.length());
+                }
+            }
+
+            webpage = connectionGet.content.text
+            cookies = returnCookies
+        } catch (e){
+            log.error(e) //throw new Exception(e);
+        } finally {
+            if(wr){
+                wr.close ();
+            }
+            if(connectionGet){
+                connectionGet.disconnect();
+            }
+            return [webpage: webpage, cookies: cookies];
+        }
+
+    }
+
+}
+
+class AmaXmlParserFactory {
+    static def parser=null
+    static def xmlParser=null
+
+    static def getXmlParser(){
+        if(!parser){
+            parser = new org.cyberneko.html.parsers.SAXParser()
+            parser.setFeature('http://xml.org/sax/features/namespaces', false)
+        }
+        if(!xmlParser){
+            xmlParser = new XmlParser(parser)
+        }
+        return xmlParser;
+    }
 }
