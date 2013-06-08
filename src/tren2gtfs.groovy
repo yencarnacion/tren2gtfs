@@ -2,8 +2,11 @@
  * Created by yamir on 6/6/13.
  */
 @Grab( 'net.sourceforge.nekohtml:nekohtml:1.9.18' )
+import java.util.zip.ZipOutputStream
+import java.util.zip.ZipEntry
 
- agency_id = 'TREN'
+ zipFileName = "TREN2GTFS.zip"
+agency_id = 'TREN'
  agency_name = 'Tren Urbano'
  agency_url = 'www.dtop.gov.pr'
  agency_timezone = 'America/Puerto_Rico'
@@ -302,11 +305,20 @@ routes << routeTrenUrbano
 
  trainScheduleFileName =  '../resources/trainschedule.csv'
 
- agencyFileName = "../resources/agency.txt"
- stopsFileName = "../resources/stops.txt"
- routesFileName = "../resources/routes.txt"
- tripsFileName = "../resources/trips.txt"
- stopTimesFileName = "../resources/stop_times.txt"
+ resourcesFolder = "../resources"
+ agencyFileName = "${resourcesFolder}/agency.txt"
+ stopsFileName = "${resourcesFolder}/stops.txt"
+ routesFileName = "${resourcesFolder}/routes.txt"
+ tripsFileName = "${resourcesFolder}/trips.txt"
+ stopTimesFileName = "${resourcesFolder}/stop_times.txt"
+
+ tren2gtfsFiles = [
+         agencyFileName,
+         stopsFileName,
+         routesFileName,
+         tripsFileName,
+         stopTimesFileName
+      ]
 
 
 agency = new Agency(agencyId: agency_id,
@@ -323,6 +335,7 @@ def trips = createTripsTxt()
 //readTrainScheduleFile()
 def stopTimes = readStopTimesFromDtopWebsite(trips)
 printStopTimes(stopTimes)
+createZipFile()
 
 
 def createAgencyTxt(def agency){
@@ -610,6 +623,25 @@ Trip getTripFromStartStopAndEndStop(def trips, Stop startStop, Stop endStop){
                     "endStop = [stopName=${endStop.stopName}, stopId=${endStop.stopId}]"
 
 }
+
+def createZipFile(){
+    ZipOutputStream zipFile = new ZipOutputStream(new FileOutputStream("${resourcesFolder}/${zipFileName}"))
+    tren2gtfsFiles.each() { fileName ->
+        zipFile.putNextEntry(new ZipEntry(fileName))
+        def buffer = new byte[1024]
+        def file = new File(fileName)
+        file.withInputStream { i ->
+            def l = i.read(buffer)
+            // check wether the file is empty
+            if (l > 0) {
+                zipFile.write(buffer, 0, l)
+            }
+        }
+        zipFile.closeEntry()
+    }
+    zipFile.close()
+}
+
 class Agency {
     String agencyId
     String agencyName
