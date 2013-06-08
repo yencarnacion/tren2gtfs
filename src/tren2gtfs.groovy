@@ -6,13 +6,14 @@ import java.util.zip.ZipOutputStream
 import java.util.zip.ZipEntry
 
  zipFileName = "TREN2GTFS.zip"
-agency_id = 'TREN'
+ agency_id = 'TREN'
  agency_name = 'Tren Urbano'
  agency_url = 'www.dtop.gov.pr'
  agency_timezone = 'America/Puerto_Rico'
  agency_lang = null
  agency_phone = null
  agency_fare_url = null
+ trainScheduleFileName =  "trainschedule.csv"
  /********/
  stops = []
  sagrado_corazon = new Stop(
@@ -303,14 +304,13 @@ routeTrenUrbano = new Route (
 routes = []
 routes << routeTrenUrbano
 
- trainScheduleFileName =  '../resources/trainschedule.csv'
 
  resourcesFolder = "../resources"
- agencyFileName = "${resourcesFolder}/agency.txt"
- stopsFileName = "${resourcesFolder}/stops.txt"
- routesFileName = "${resourcesFolder}/routes.txt"
- tripsFileName = "${resourcesFolder}/trips.txt"
- stopTimesFileName = "${resourcesFolder}/stop_times.txt"
+ agencyFileName = "agency.txt"
+ stopsFileName = "stops.txt"
+ routesFileName = "routes.txt"
+ tripsFileName = "trips.txt"
+ stopTimesFileName = "stop_times.txt"
 
  tren2gtfsFiles = [
          agencyFileName,
@@ -339,7 +339,7 @@ createZipFile()
 
 
 def createAgencyTxt(def agency){
-    def agencyTxt = new File(agencyFileName)
+    def agencyTxt = new File("${resourcesFolder}/${agencyFileName}")
     agencyTxt.newWriter()
     agencyTxt << ("agency_id, agency_name,agency_url,agency_timezone,agency_phone,agency_lang") << "\r\n"
     agencyTxt << (agency.agencyId?agency.agencyId+",":",")
@@ -356,7 +356,7 @@ def createAgencyTxt(def agency){
 }
 
 def createStopsTxt(def stops){
-    def stopsTxt = new File(stopsFileName)
+    def stopsTxt = new File("${resourcesFolder}/${stopsFileName}")
     stopsTxt.newWriter()
     stopsTxt << ("stop_id,stop_code,stop_name,stop_desc,stop_lat,stop_lon,zone_id,stop_url,location_type,parent_station,stop_timezone,wheelchair_boarding") << "\r\n"
     stops.each { stop ->
@@ -377,7 +377,7 @@ def createStopsTxt(def stops){
 }
 
 def createRoutesTxt(def routes){
-    def routesTxt = new File (routesFileName)
+    def routesTxt = new File ("${resourcesFolder}/${routesFileName}")
     routesTxt.newWriter()
     routesTxt << ("route_id,route_short_name,route_long_name,route_desc,route_type") << "\r\n"
     routes.each { route ->
@@ -455,7 +455,7 @@ def createTripsTxt(){
         }
     }
 
-    def tripsTxt = new File (tripsFileName)
+    def tripsTxt = new File ("${resourcesFolder}/${tripsFileName}")
     tripsTxt.newWriter()
 
     tripsTxt << ("route_id,service_id,trip_id,trip_headsign,trip_short_name,direction_id,block_id,shape_id,wheelchair_accessible") << '\r\n'
@@ -468,7 +468,7 @@ def createTripsTxt(){
 
 def readTrainScheduleFile() {
 
-    def trainScheduleFile = new File (trainScheduleFileName)
+    def trainScheduleFile = new File ("${resourcesFolder}/${trainScheduleFileName}")
     def trainArrivals = []
 
     trainScheduleFile.eachLine { line ->
@@ -602,7 +602,7 @@ def printStopTimes(def stopTimes){
         theFile << stopTime.stopSequence << "\r\n"
     }
 
-    def stopTimesTxt = new File (stopTimesFileName)
+    def stopTimesTxt = new File ("${resourcesFolder}/${stopTimesFileName}")
     stopTimesTxt.newWriter()
 
     stopTimesTxt << ("trip_id,arrival_time,departure_time,stop_id,stop_sequence") << '\r\n'
@@ -629,7 +629,7 @@ def createZipFile(){
     tren2gtfsFiles.each() { fileName ->
         zipFile.putNextEntry(new ZipEntry(fileName))
         def buffer = new byte[1024]
-        def file = new File(fileName)
+        def file = new File("${resourcesFolder}/${fileName}")
         file.withInputStream { i ->
             def l = i.read(buffer)
             // check wether the file is empty
