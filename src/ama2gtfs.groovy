@@ -306,6 +306,7 @@ routes << routeTrenUrbano
  stopsFileName = "../resources/stops.txt"
  routesFileName = "../resources/routes.txt"
  tripsFileName = "../resources/trips.txt"
+ stopTimesFileName = "../resources/stop_times.txt"
 
 
 agency = new Agency(agencyId: agency_id,
@@ -318,9 +319,10 @@ agency = new Agency(agencyId: agency_id,
 createAgencyTxt(agency)
 createStopsTxt(stops)
 createRoutesTxt(routes)
-createTripsTxt()
+def trips = createTripsTxt()
 //readTrainScheduleFile()
-readTrainScheduleWebsite()
+def stopTimes = readStopTimesFromDtopWebsite(trips)
+printStopTimes(stopTimes)
 
 
 def createAgencyTxt(def agency){
@@ -385,14 +387,14 @@ Stop getStopFromNumber(int i){
 
 def createTripsTxt(){
     def printTrip = {theFile, trip ->
-        theFile << trip.route_id+","
-        theFile << trip.service_id+","
-        theFile << trip.trip_id+","
-        theFile << trip.trip_headsign+","
-        theFile << trip.trip_short_name+","
-        theFile << trip.direction_id+","
-        theFile << trip.shape_id+","
-        theFile << trip.wheelchair_accessible+","
+        theFile << trip.routeId+","
+        theFile << trip.serviceId+","
+        theFile << trip.tripId+","
+        theFile << trip.tripHeadsign+","
+        theFile << trip.tripShortName+","
+        theFile << trip.directionId+","
+        theFile << trip.shapeId+","
+        theFile << trip.wheelchairAccessible+","
         theFile << "\r\n"
 
     }
@@ -406,15 +408,17 @@ def createTripsTxt(){
             for (int stopId=startId+1; stopId<=stops.size(); stopId++){
                 Stop theStop = getStopFromNumber(stopId)
                 Trip trip = new Trip();
-                trip.route_id = ((Route) routes[0]).routeId
-                trip.service_id = "LOW_SEASON_WORKDAY"
-                trip.trip_id = "${++count}"
-                trip.trip_headsign = theStop.stopName
-                trip.trip_short_name = "${theStart.stopName} / ${theStop.stopName}"
-                trip.direction_id = "0"
-                trip.block_id = ""
-                trip.shape_id = ""
-                trip.wheelchair_accessible = ""
+                trip.startStop = theStart
+                trip.endStop = theStop
+                trip.routeId = ((Route) routes[0]).routeId
+                trip.serviceId = "LOW_SEASON_WORKDAY"
+                trip.tripId = "${++count}"
+                trip.tripHeadsign = theStop.stopName
+                trip.tripShortName = "${theStart.stopName} / ${theStop.stopName}"
+                trip.directionId = "0"
+                trip.blockId = ""
+                trip.shapeId = ""
+                trip.wheelchairAccessible = ""
                 trips << trip
             }
         }
@@ -422,15 +426,17 @@ def createTripsTxt(){
             for (int stopId = startId -1; stopId >=1; stopId--){
                 Stop theStop = getStopFromNumber(stopId)
                 Trip trip = new Trip();
-                trip.route_id = ((Route) routes[0]).routeId
-                trip.service_id = "LOW_SEASON_WORKDAY"
-                trip.trip_id = "${++count}"
-                trip.trip_headsign = theStop.stopName
-                trip.trip_short_name = "${theStart.stopName} / ${theStop.stopName}"
-                trip.direction_id = "1"
-                trip.block_id = ""
-                trip.shape_id = ""
-                trip.wheelchair_accessible = ""
+                trip.startStop = theStart
+                trip.endStop = theStop
+                trip.routeId = ((Route) routes[0]).routeId
+                trip.serviceId = "LOW_SEASON_WORKDAY"
+                trip.tripId = "${++count}"
+                trip.tripHeadsign = theStop.stopName
+                trip.tripShortName = "${theStart.stopName} / ${theStop.stopName}"
+                trip.directionId = "1"
+                trip.blockId = ""
+                trip.shapeId = ""
+                trip.wheelchairAccessible = ""
                 trips << trip
             }
         }
@@ -444,6 +450,7 @@ def createTripsTxt(){
     for(Trip t: trips){
         printTrip.call(tripsTxt,t)
     }
+    return trips
 }
 
 def readTrainScheduleFile() {
@@ -469,18 +476,21 @@ def readTrainScheduleFile() {
 
 }
 
-
-def readTrainScheduleWebsite(){
+/**
+ * Reads stop times from http://www.dtop.gov.pr/itinerario.asp
+ */
+def readStopTimesFromDtopWebsite(def trips){
     def trainScheduleUrlFrom = {direction, departStationId -> "http://tempo7.praxisinteractive.net/dtopweb/itinerario/departure.php?st_id=${direction}&pl_id=${departStationId}"}
     def trainScheduleUrlDeparting = {direction, departStationId, trainId -> "http://tempo7.praxisinteractive.net/dtopweb/itinerario/plataforma2.php?st_id=${direction}&pl_id=${departStationId}&train_id=${trainId}"}
     def trainScheduleUrlArrivalTime = {direction, departStationId, trainId, arriveStationId -> "http://tempo7.praxisinteractive.net/dtopweb/itinerario/arrival.php?st_id=${direction}&pl_id=${departStationId}&train_id=${trainId}&pl_id2=${arriveStationId}" }
 
     WebConnectService webConnectService = new WebConnectService()
+    def stopTimes = []
     def directions = ["1"]
     for (String direction: directions) {
-        for(Stop stop:stops){
-            println stop.stopName+" : "
-            def pageWithDepartingTimes = webConnectService.doGetConnection(new URL(trainScheduleUrlFrom.call(direction, stop.stopId)), "")
+        for(Stop startStop:stops){
+            println startStop.stopName+" : "
+            def pageWithDepartingTimes = webConnectService.doGetConnection(new URL(trainScheduleUrlFrom.call(direction, startStop.stopId)), "")
             def page = AmaXmlParserFactory.getXmlParser().parseText(pageWithDepartingTimes.webpage);
 
             def departTimes = page.depthFirst().getAt('OPTION')
@@ -499,11 +509,11 @@ def readTrainScheduleWebsite(){
 
             departTimesList.each { departTime ->
                 println stops.size()
-                println stop.stopId
+                println startStop.stopId
                 Boolean doNotContinue = false;
 
                     //println trainScheduleUrlDeparting.call(direction, stop.stopId, departTime['trainId'])
-                def pageWithArrivalStationText = webConnectService.doGetConnection(new URL(trainScheduleUrlDeparting.call(direction, stop.stopId, departTime['trainId'])), "")
+                def pageWithArrivalStationText = webConnectService.doGetConnection(new URL(trainScheduleUrlDeparting.call(direction, startStop.stopId, departTime['trainId'])), "")
 
                 println pageWithArrivalStationText
                 def pageWithArrivalStationXml = AmaXmlParserFactory.getXmlParser().parseText(pageWithArrivalStationText.webpage);
@@ -526,13 +536,37 @@ def readTrainScheduleWebsite(){
                 }
 
                 arrivalStationsList.each { arrivalStation ->
-                   println trainScheduleUrlArrivalTime.call(direction, stop.stopId, departTime['trainId'], arrivalStation.value)
+                   println trainScheduleUrlArrivalTime.call(direction, startStop.stopId, departTime['trainId'], arrivalStation.value)
                    def pageWithArrivalTimeText = webConnectService.doGetConnection(new URL(
-                           trainScheduleUrlArrivalTime.call(direction, stop.stopId, departTime['trainId'], arrivalStation.value)
+                           trainScheduleUrlArrivalTime.call(direction, startStop.stopId, departTime['trainId'], arrivalStation.value)
                         ), "")
                     //def pageWithArrivalTimeXml = AmaXmlParserFactory.getXmlParser().parseText(pageWithArrivalTimeText.webpage);
                     //def arrivalTime = pageWithArrivalTimeXml.depthFirst()
                     println "*****Arrival Time:"+ pageWithArrivalTimeText.webpage+"*****\n"
+                    def at = pageWithArrivalTimeText.webpage
+
+                    def calculateStopSequence = {Stop beginStop, Stop finishStop ->
+                        int beginStopInt = new Integer(beginStop.stopId)
+                        int endStopInt = new Integer(finishStop.stopId)
+                        if(beginStopInt > endStopInt){
+                            beginStopInt - endStopInt
+                        } else if (endStopInt > beginStopInt) {
+                            endStopInt - beginStopInt
+                        } else {
+                            assert false: "Beginning and End Stop should not be the same.  Received: beginStop = ${beginStopInt}; endStop = ${endStopInt} "
+                        }
+
+                    }
+                    def finishStop = getStopFromNumber(new Integer((String)arrivalStation.value))
+                    def stopTime = new StopTime(
+                             tripId: getTripFromStartStopAndEndStop(trips, startStop, finishStop),
+                             arrivalTime: at,
+                             departureTime: departTime,
+                             stopId: startStop.stopId,
+                             stopSequence: calculateStopSequence.call(startStop, finishStop)
+
+                    )
+                    stopTimes << stopTime
 
                 }
                     //arrivalStation.each
@@ -541,6 +575,40 @@ def readTrainScheduleWebsite(){
 
         }
     }
+
+    return stopTimes
+
+}
+
+def printStopTimes(def stopTimes){
+    def printStopTime = {theFile, StopTime stopTime ->
+        theFile << stopTime.tripId+","
+        theFile << stopTime.arrivalTime+","
+        theFile << stopTime.departureTime+","
+        theFile << stopTime.stopId+","
+        theFile << stopTime.stopSequence << "\r\n"
+    }
+
+    def stopTimesTxt = new File (stopTimesFileName)
+    stopTimesTxt.newWriter()
+
+    stopTimesTxt << ("trip_id,arrival_time,departure_time,stop_id,stop_sequence") << '\r\n'
+
+    for(StopTime st: stopTimes){
+        printStopTime.call(stopTimesTxt,st)
+    }
+}
+
+Trip getTripFromStartStopAndEndStop(def trips, Stop startStop, Stop endStop){
+    for(Trip t: trips){
+        if(t.startStop.stopId == startStop.stopId && t.endStop.stopId == endStop.stopId){
+            return t
+        }
+    }
+
+    assert false: "No trip found!\nReceived:\nstartStop = [stopName=${startStop.stopName}, stopId=${startStop.stopId}]"+
+                    "endStop = [stopName=${endStop.stopName}, stopId=${endStop.stopId}]"
+
 }
 class Agency {
     String agencyId
@@ -581,15 +649,17 @@ class Route {
 }
 
 class Trip {
-    String route_id
-    String service_id
-    String trip_id
-    String trip_headsign
-    String trip_short_name
-    String direction_id
-    String block_id
-    String shape_id
-    String wheelchair_accessible
+    Stop startStop
+    Stop endStop
+    String routeId
+    String serviceId
+    String tripId
+    String tripHeadsign
+    String tripShortName
+    String directionId
+    String blockId
+    String shapeId
+    String wheelchairAccessible
 }
 
 class TrainArrival {
@@ -597,6 +667,14 @@ class TrainArrival {
     String direction
     String daytipe
     String arrivalTime
+}
+
+class StopTime {
+    String tripId
+    String arrivalTime
+    String departureTime
+    String stopId
+    String stopSequence
 }
 
 class WebConnectService {
