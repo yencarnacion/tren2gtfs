@@ -504,7 +504,7 @@ def readStopTimesFromDtopWebsite(def trips){
         for(Stop startStop:stops){
             println startStop.stopName+" : "
             def pageWithDepartingTimes = webConnectService.doGetConnection(new URL(trainScheduleUrlFrom.call(direction, startStop.stopId)), "")
-            def page = AmaXmlParserFactory.getXmlParser().parseText(pageWithDepartingTimes.webpage);
+            def page = TrenXmlParserFactory.getXmlParser().parseText(pageWithDepartingTimes.webpage);
 
             def departTimes = page.depthFirst().getAt('OPTION')
 
@@ -529,7 +529,7 @@ def readStopTimesFromDtopWebsite(def trips){
                 def pageWithArrivalStationText = webConnectService.doGetConnection(new URL(trainScheduleUrlDeparting.call(direction, startStop.stopId, departTime['trainId'])), "")
 
                 println pageWithArrivalStationText
-                def pageWithArrivalStationXml = AmaXmlParserFactory.getXmlParser().parseText(pageWithArrivalStationText.webpage);
+                def pageWithArrivalStationXml = TrenXmlParserFactory.getXmlParser().parseText(pageWithArrivalStationText.webpage);
                 def arrivalStations = pageWithArrivalStationXml.depthFirst().getAt('OPTION')
 
                 def arrivalStationsList = []
@@ -553,7 +553,7 @@ def readStopTimesFromDtopWebsite(def trips){
                    def pageWithArrivalTimeText = webConnectService.doGetConnection(new URL(
                            trainScheduleUrlArrivalTime.call(direction, startStop.stopId, departTime['trainId'], arrivalStation.value)
                         ), "")
-                    //def pageWithArrivalTimeXml = AmaXmlParserFactory.getXmlParser().parseText(pageWithArrivalTimeText.webpage);
+                    //def pageWithArrivalTimeXml = TrenXmlParserFactory.getXmlParser().parseText(pageWithArrivalTimeText.webpage);
                     //def arrivalTime = pageWithArrivalTimeXml.depthFirst()
                     println "*****Arrival Time:"+ pageWithArrivalTimeText.webpage+"*****\n"
                     def at = pageWithArrivalTimeText.webpage
@@ -834,7 +834,7 @@ class WebConnectService {
 
 }
 
-class AmaXmlParserFactory {
+class TrenXmlParserFactory {
     static def parser=null
     static def xmlParser=null
 
