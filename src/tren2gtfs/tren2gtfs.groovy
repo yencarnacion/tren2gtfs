@@ -328,6 +328,53 @@ debug = true
 
 dayTypes = ["LOW_SEASON_WORKDAY", "RESTDAY", "WORKDAY"]
 
+calendar = []
+
+low_season_workday = new CalendarItem(
+         service_id: "LOW_SEASON_WORKDAY",
+         monday: 1,
+         tuesday: 1,
+         wednesday: 1,
+         thursday: 1,
+         friday: 1,
+         saturday: 0,
+         sunday: 0,
+         start_date: '20130601',
+         end_date: '20130731'
+)
+
+calendar << low_season_workday
+
+restday = new CalendarItem(
+        service_id: "RESTDAY",
+        monday: 0,
+        tuesday: 0,
+        wednesday: 0,
+        thursday: 0,
+        friday: 0,
+        saturday: 1,
+        sunday: 1,
+        start_date: '20130101',
+        end_date: '20131231'
+)
+
+calendar << restday
+
+workday = new CalendarItem(
+        serviceId: "WORKDAY",
+        monday: 1,
+        tuesday: 1,
+        wednesday: 1,
+        thursday: 1,
+        friday: 1,
+        saturday: 0,
+        sunday: 0,
+        startDate: '20130801',
+        endDate: '20131231'
+)
+
+calendar << workday
+
 /******/
 
 TrainGlobals.globals['debug'] = debug
@@ -341,13 +388,15 @@ routes << routeTrenUrbano
  routesFileName = "routes.txt"
  tripsFileName = "trips.txt"
  stopTimesFileName = "stop_times.txt"
+ calendarFileName = "calendar.txt"
 
  tren2gtfsFiles = [
          agencyFileName,
          stopsFileName,
          routesFileName,
          tripsFileName,
-         stopTimesFileName
+         stopTimesFileName,
+         calendarFileName
       ]
 
 agency = new Agency(agencyId: agency_id,
@@ -361,13 +410,15 @@ createAgencyTxt(agency)
 stopCollection = new StopCollection()
 createStopsTxt(stopCollection.getTheStops())
 createRoutesTxt(routes)
-def trips = createTripsTxt(StopCollection.getTheStops(), dayTypes)
+def trips = new Trips("${resourcesFolder}/${tripsFileName}", routes, StopCollection, dayTypes)
+trips.createTripsTxt()
 
-//TrainSchedule ts = new TrainSchedule("${resourcesFolder}/${trainScheduleFileName}", stopCollection, timezone).readScheduleFromTrainArrivals()
+def stopTimes = new TrainSchedule("${resourcesFolder}/${trainScheduleFileName}", routes, stopCollection, trips, timezone).createStopTimesFromTrainArrivals()
 //readTrainScheduleFile()
 //def stopTimes = readStopTimesFromDtopWebsite(trips)
 //printStopTimes(stopTimes)
-createStopTimesTxt()
+createStopTimesTxt(stopTimes)
+createCalendarTxt(calendar)
 createZipFile()
 
 def createAgencyTxt(def agency){
@@ -426,93 +477,18 @@ def createRoutesTxt(def routes){
 
 }
 
-def createTripsTxt(stops, dayTypes){
-    def printTrip = {theFile, trip ->
-        theFile << trip.routeId+","
-        theFile << trip.serviceId+","
-        theFile << trip.tripId+","
-        theFile << trip.tripHeadsign+","
-        theFile << trip.tripShortName+","
-        theFile << trip.directionId+","
-        theFile << trip.shapeId+","
-        theFile << trip.wheelchairAccessible+","
-        theFile << "\r\n"
-
-    }
-
-    def trips = []
-
-    int count = 0;
-    for(int startId=1; startId<= stops.size(); startId++){
-        Stop theStart = StopCollection.getStopFromId(startId)
-        dayTypes.each {dayType ->
-            if(startId < stops.size()){
-                for (int stopId=startId+1; stopId<=stops.size(); stopId++){
-                    Stop theStop = StopCollection.getStopFromId(stopId)
-                    Trip trip = new Trip();
-                    trip.startStop = theStart
-                    trip.endStop = theStop
-                    trip.routeId = ((Route) routes[0]).routeId
-                    trip.serviceId = dayType
-                    trip.tripId = "${++count}"
-                    trip.tripHeadsign = theStop.stopName
-                    trip.tripShortName = "${theStart.stopName} / ${theStop.stopName}"
-                    trip.directionId = "TO_SAGRADO"
-                    trip.blockId = ""
-                    trip.shapeId = ""
-                    trip.wheelchairAccessible = ""
-                    trips << trip
-                }
-            }
-            if(startId > 1){
-                for (int stopId = startId -1; stopId >=1; stopId--){
-                    Stop theStop = StopCollection.getStopFromId(stopId)
-                    Trip trip = new Trip();
-                    trip.startStop = theStart
-                    trip.endStop = theStop
-                    trip.routeId = ((Route) routes[0]).routeId
-                    trip.serviceId = dayType
-                    trip.tripId = "${++count}"
-                    trip.tripHeadsign = theStop.stopName
-                    trip.tripShortName = "${theStart.stopName} / ${theStop.stopName}"
-                    trip.directionId = "TO_BAYAMON"
-                    trip.blockId = ""
-                    trip.shapeId = ""
-                    trip.wheelchairAccessible = ""
-                    trips << trip
-                }
-            }
-        }
-    }
-
-    def tripsTxt = new File ("${resourcesFolder}/${tripsFileName}")
-    tripsTxt.newWriter()
-
-    tripsTxt << ("route_id,service_id,trip_id,trip_headsign,trip_short_name,direction_id,block_id,shape_id,wheelchair_accessible") << '\r\n'
-
-    for(Trip t: trips){
-        printTrip.call(tripsTxt,t)
-    }
-    return trips
-}
-
-def createStopTimesTxt(){
+def createStopTimesTxt(stopTimes){
     def stopTimesTxt = new File("${resourcesFolder}/${stopTimesFileName}")
     stopTimesTxt.newWriter()
-    stopTimesTxt << ("trip_id, arrival_time,departure_time,stop_id,stop_sequence,stop_headsign,pickup_type,drop_off_type,shape_dist_traveled") << "\r\n"
-
-
-//    agencyTxt << (agency.agencyId?agency.agencyId+",":",")
-//    assert(agency.agencyName)
-//    agencyTxt << (agency.agencyName?agency.agencyName+",":",")
-//    assert(agency.agencyUrl)
-//    agencyTxt << (agency.agencyUrl?agency.agencyUrl+",":",")
-//    assert(agency.agencyTimezone)
-//    agencyTxt << (agency.agencyTimezone?agency.agencyTimezone+",":",")
-//    agencyTxt << (agency.agencyLang?agency.agencyLanga+",":",")
-//    agencyTxt << (agency.agencyPhone?agency.agencyPhone+",":",")
-//    agencyTxt << (agency.agencyFareUrl?agency.agencyFareUrl:"") << "\r\n"
-
+    stopTimesTxt << ("trip_id,arrival_time,departure_time,stop_id,stop_sequence,stop_headsign,pickup_type,drop_off_type,shape_dist_traveled") << "\r\n"
+    stopTimes.each { StopTime stopTime ->
+        stopTimesTxt << (stopTime.tripId?stopTime.tripId+",":",")
+        stopTimesTxt << (stopTime.arrivalTime?stopTime.arrivalTime+",":",")
+        stopTimesTxt << (stopTime.departureTime?stopTime.departureTime+",":",")
+        stopTimesTxt << (stopTime.stopId?stopTime.stopId+",":",")
+        stopTimesTxt << (stopTime.stopSequence?stopTime.stopSequence+",":",")
+        stopTimesTxt << (",,,") << '\r\n'
+    }
 }
 
 
@@ -532,6 +508,25 @@ def createZipFile(){
         zipFile.closeEntry()
     }
     zipFile.close()
+}
+
+def createCalendarTxt(def calendar){
+    def calendarTxt = new File("${resourcesFolder}/${calendarFileName}")
+    calendarTxt.newWriter()
+    calendarTxt << ("service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date") << "\r\n"
+    calendar.each { CalendarItem calendarItem ->
+        calendarTxt << (calendarItem.service_id?calendarItem.serviceId+",":",")
+        calendarTxt << (calendarItem.monday?calendarItem.monday+",":",")
+        calendarTxt << (calendarItem.tuesday?calendarItem.tuesday+",":",")
+        calendarTxt << (calendarItem.wednesday?calendarItem.wednesday+",":",")
+        calendarTxt << (calendarItem.thursday?calendarItem.thursday+",":",")
+        calendarTxt << (calendarItem.friday?calendarItem.friday+",":",")
+        calendarTxt << (calendarItem.saturday?calendarItem.saturday+",":",")
+        calendarTxt << (calendarItem.sunday?calendarItem.sunday+",":",")
+        calendarTxt << (calendarItem.start_date?calendarItem.startDate+",":",")
+        calendarTxt << (calendarItem.end_date?calendarItem.endDate+",":",") << "\r\n"
+    }
+
 }
 
 //Stop getStopFromNumber(int i){
