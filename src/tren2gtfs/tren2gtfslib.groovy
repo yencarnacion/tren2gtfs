@@ -397,7 +397,7 @@ class TrainSchedule {
 
                                 if(TrainGlobals.globals['debug']){
                                     println ">>>>>>>"
-                                    println "[${i++}]-${daytype}-(${direction}) From ${startStopStation.stopName} To ${destinationStopStation.stopName}"
+                                    println "[${i++}]-${daytype}-(${direction}) From ${startStopStation.stopName}(${startStationId}) To ${destinationStopStation.stopName}(${stopStationId}) leaving at ${leavingTime}"
 //                                    println "Leaves: ${leavingTime} and Arrives: ${arrivalTime}"
                                     println "<<<<<<<"
                                 }
