@@ -236,7 +236,7 @@ class TrainSchedule {
                 if(!(daytype in dayTypes)){
                     dayTypes << daytype
                 }
-                if(!(direction in directions)){
+                if(!((((String) direction).toLowerCase()) in directions)){
                     directions << ((String) direction).toLowerCase()
                 }
                 trainArrivals << trainArrival
@@ -266,12 +266,13 @@ class TrainSchedule {
                 def startStopStation = stopCollection.getStopFromId(startStationId)
                 for(int stopStationId = 1; stopStationId <= stops.size(); stopStationId++){
 
-                    //For Testing
-                    if(!(((direction == 'to_sagrado')&& (startStationId==1) && (stopStationId==16)) ||
-                            ((direction == "to_bayamon") && (startStationId==16) && (stopStationId==1)))
-                    )
-                        continue;
-
+//                    //For Testing
+//                    if(TrainGlobals.globals['debug']){
+//                        if(!(((direction == 'to_sagrado')&& (startStationId==1) && (stopStationId==16)) ||
+//                                ((direction == "to_bayamon") && (startStationId==16) && (stopStationId==1)))
+//                        )
+//                            continue;
+//                    }
 
                     if((direction == 'to_sagrado' && (startStationId < stopStationId) ) ||
                             (direction == 'to_bayamon' && (startStationId > stopStationId))
