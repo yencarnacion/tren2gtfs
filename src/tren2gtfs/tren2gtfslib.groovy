@@ -396,17 +396,17 @@ class TrainSchedule {
                     ){
                         def destinationStopStation = stopCollection.getStopFromId(stopStationId)
                         dayTypes.each({daytype ->
+
+                            if(TrainGlobals.globals['debug']){
+                                println ">>>>>>>"
+                                println "[${i++}]-${daytype}-(${direction}) From ${startStopStation.stopName}(${startStationId}) To ${destinationStopStation.stopName}(${stopStationId})"// leaving at ${leavingTime}"
+//                                    println "Leaves: ${leavingTime} and Arrives: ${arrivalTime}"
+                                println "<<<<<<<"
+                            }
                             def leavingTimes = getStopTrainScheduleTimes(startStopStation, direction, daytype)
                             leavingTimes.each({ leavingTime ->
                                 //def arrivalTime = getStopTrainArrivalTime(startStationId, direction, leavingTime, stopStationId, daytype)
 
-
-                                if(TrainGlobals.globals['debug']){
-                                    println ">>>>>>>"
-                                    println "[${i++}]-${daytype}-(${direction}) From ${startStopStation.stopName}(${startStationId}) To ${destinationStopStation.stopName}(${stopStationId}) leaving at ${leavingTime}"
-//                                    println "Leaves: ${leavingTime} and Arrives: ${arrivalTime}"
-                                    println "<<<<<<<"
-                                }
                                 Trip t = trips.findTrip(startStopStation, destinationStopStation, daytype, direction)
 
                                 def stopSequence = getStopTrainStopSequence(startStationId, direction, leavingTime, stopStationId, daytype)
