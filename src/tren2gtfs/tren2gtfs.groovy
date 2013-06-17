@@ -2,10 +2,21 @@ package tren2gtfs
 /**
  * Created by yamir on 6/6/13.
  */
-
+@Grab(
+        group='joda-time',
+        module='joda-time',
+        version='2.2'
+)
+@GrabExclude('xml-apis:xml-apis')
 import java.util.zip.ZipOutputStream
 import java.util.zip.ZipEntry
+import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
+import org.joda.time.Period
 
+ agency_timezone = 'America/Puerto_Rico'
+
+ startTime = new DateTime(DateTimeZone.forID(agency_timezone))
  resourcesFolder = "../resources"
  trainScheduleFileName =  "trainschedule.csv"
 
@@ -13,7 +24,7 @@ import java.util.zip.ZipEntry
  agency_id = 'TREN'
  agency_name = 'Tren Urbano'
  agency_url = 'www.dtop.gov.pr'
- agency_timezone = 'America/Puerto_Rico'
+
  agency_lang = null
  agency_phone = null
  agency_fare_url = null
@@ -667,6 +678,15 @@ def createCalendarTxt(def calendar){
 //                    "endStop = [stopName=${endStop.stopName}, stopId=${endStop.stopId}]"
 //
 //}
+
+stopTime = new DateTime(DateTimeZone.forID(agency_timezone))
+Period p = new Period(startTime, stopTime);
+println "-----------------------------------"
+println "Start Time: "+startTime.toString()
+println "Stop Time: "+stopTime.toString()
+println "Time elapsed: "+p.toString()
+println "-----------------------------------"
+
 
 
 

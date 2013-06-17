@@ -415,7 +415,8 @@ class TrainSchedule {
                                     StopTime stopTime = new StopTime(
                                             tripId: t.tripId.toString(),
                                             arrivalTime: sseq.arrivalTime.toString(),
-                                            departureTime: leavingTime.toString(),
+//                                            departureTime: leavingTime.toString(),
+                                            departureTime: sseq.arrivalTime.toString(),
                                             stopId: sseq.stopId.toString(),
                                             stopSequence: sseq.stopSequence.toString()
                                     )
