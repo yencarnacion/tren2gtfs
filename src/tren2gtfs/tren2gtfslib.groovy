@@ -110,7 +110,7 @@ class Trips {
                         trip.routeId = ((Route) routes[0]).routeId
                         trip.serviceId = dayType
                         trip.tripId = "${++count}"
-                        trip.tripHeadsign = theStop.stopName
+                        trip.tripHeadsign = "TO_SAGRADO" // theStop.stopName
                         trip.tripShortName = "${theStart.stopName} / ${theStop.stopName}"
                         trip.directionId = "TO_SAGRADO"
                         trip.blockId = ""
@@ -128,7 +128,7 @@ class Trips {
                         trip.routeId = ((Route) routes[0]).routeId
                         trip.serviceId = dayType
                         trip.tripId = "${++count}"
-                        trip.tripHeadsign = theStop.stopName
+                        trip.tripHeadsign = "TO_BAYAMON" // theStop.stopName
                         trip.tripShortName = "${theStart.stopName} / ${theStop.stopName}"
                         trip.directionId = "TO_BAYAMON"
                         trip.blockId = ""
@@ -435,15 +435,16 @@ class TrainSchedule {
     def getStopTrainStopSequence(int fromStationId, direction, fromTrainTime, int toStationId, daytype){
         def stops = stopCollection.getTheStops()
         def stopSequence = []
-//        class StopTime {
-//            String tripId
-//            String arrivalTime
-//            String departureTime
-//            String stopId
-//            String stopSequence
-//        }
+
         if(direction=="to_bayamon"){
             assert(fromStationId>toStationId)
+            def stopSequenceItem = [
+                    arrivalTime: fromTrainTime,
+                    departureTime: fromTrainTime,
+                    stopId: fromStationId,
+                    stopSequence: 1
+            ]
+            stopSequence << stopSequenceItem
             int nextStation = fromStationId-1
             def nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
             def nextStationArrival = nextStationSchedule.find({
@@ -453,14 +454,14 @@ class TrainSchedule {
                             null
                         }
                     })
-            def stopSequenceItem = null
+
 
             if(nextStationArrival){
                 stopSequenceItem = [
                     arrivalTime: nextStationArrival,
-                    departureTime: fromTrainTime,
+                    departureTime: nextStationArrival,
                     stopId: nextStation,
-                    stopSequence: fromStationId - nextStation
+                    stopSequence: fromStationId - nextStation + 1
                 ]
                 stopSequence << stopSequenceItem
                 while(nextStation>toStationId){
@@ -477,9 +478,9 @@ class TrainSchedule {
                     if(nextStationArrival){
                         stopSequenceItem = [
                                 arrivalTime: nextStationArrival,
-                                departureTime: fromTrainTime,
+                                departureTime: nextStationArrival,
                                 stopId: nextStation,
-                                stopSequence: fromStationId - nextStation
+                                stopSequence: fromStationId - nextStation + 1
                         ]
                         stopSequence << stopSequenceItem
                     }
@@ -490,6 +491,13 @@ class TrainSchedule {
 
         if(direction=="to_sagrado"){
             assert (toStationId>fromStationId)
+            def stopSequenceItem = [
+                    arrivalTime: fromTrainTime,
+                    departureTime: fromTrainTime,
+                    stopId: fromStationId,
+                    stopSequence: 1
+            ]
+            stopSequence << stopSequenceItem
             int nextStation = fromStationId+1
             def nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
 
@@ -500,13 +508,12 @@ class TrainSchedule {
                     null
                 }
             })
-            def stopSequenceItem = null
             if(nextStationArrival){
                 stopSequenceItem = [
                         arrivalTime: nextStationArrival,
-                        departureTime: fromTrainTime,
+                        departureTime: nextStationArrival,
                         stopId: nextStation,
-                        stopSequence: nextStation - fromStationId
+                        stopSequence: nextStation - fromStationId + 1
                 ]
                 stopSequence << stopSequenceItem
             }
@@ -525,9 +532,9 @@ class TrainSchedule {
                 if(nextStationArrival){
                     stopSequenceItem = [
                             arrivalTime: nextStationArrival,
-                            departureTime: fromTrainTime,
+                            departureTime: nextStationArrival,
                             stopId: nextStation,
-                            stopSequence: nextStation - fromStationId
+                            stopSequence: nextStation - fromStationId + 1
                     ]
 
                     stopSequence << stopSequenceItem

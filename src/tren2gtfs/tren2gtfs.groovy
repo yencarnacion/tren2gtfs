@@ -507,16 +507,9 @@ def createZipFile(){
     ZipOutputStream zipFile = new ZipOutputStream(new FileOutputStream("${resourcesFolder}/${zipFileName}"))
     tren2gtfsFiles.each() { fileName ->
         zipFile.putNextEntry(new ZipEntry(fileName))
-        def buffer = new byte[1024]
         def file = new File("${resourcesFolder}/${fileName}")
         file.withInputStream { i ->
-            def l = 0
-            while(l = i.read(buffer)){
-            // check wether the file is empty
-                if (l > 0) {
-                    zipFile.write(buffer, 0, l)
-                }
-            }
+            zipFile << i
         }
         zipFile.closeEntry()
     }
@@ -684,8 +677,8 @@ def createCalendarTxt(def calendar){
 stopTime = new DateTime(DateTimeZone.forID(timezone))
 //Period p = new Period(startTime, stopTime);
 println "-----------------------------------"
-println "Start Time: "+startTime.toString()
-println "Stop Time: "+stopTime.toString()
+println "Start Time: "+startTime.toString("HH:mm:ss")
+println "Stop Time: "+stopTime.toString("HH:mm:ss")
 //println "Time elapsed: "+p.toString()
 println "-----------------------------------"
 
