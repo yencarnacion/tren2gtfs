@@ -307,6 +307,7 @@ class TrainLocalTime implements Comparable<TrainLocalTime> {
 
         int comparison = ljdt.compareTo(ojdt)
         return (comparison > 0)
+
     }
 }
 
@@ -384,6 +385,11 @@ class TrainSchedule {
 //                        )
 //                            continue;
 //                    }
+//                    if(TrainGlobals.globals['debug']){
+//                        if(!(((direction == 'to_sagrado')&& (startStationId==15) && (stopStationId==16)))
+//                        )
+//                            continue;
+//                    }
 
                     if((direction == 'to_sagrado' && (startStationId < stopStationId) ) ||
                             (direction == 'to_bayamon' && (startStationId > stopStationId))
@@ -439,57 +445,92 @@ class TrainSchedule {
             assert(fromStationId>toStationId)
             int nextStation = fromStationId-1
             def nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
-            def nextStationArrival = nextStationSchedule.find({if(it.isAfter(fromTrainTime)) it})
-            def stopSequenceItem = [
+            def nextStationArrival = nextStationSchedule.find({
+                        try{
+                            if(it.isAfter(fromTrainTime)) it
+                        } catch (NullPointerException npe){
+                            null
+                        }
+                    })
+            def stopSequenceItem = null
+
+            if(nextStationArrival){
+                stopSequenceItem = [
                     arrivalTime: nextStationArrival,
                     departureTime: fromTrainTime,
                     stopId: nextStation,
                     stopSequence: fromStationId - nextStation
-
-            ]
-
-            stopSequence << stopSequenceItem
-            while(nextStation>toStationId){
-                nextStation = nextStation - 1
-                nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
-                nextStationArrival = nextStationSchedule.find({if(it.isAfter(nextStationArrival)) it})
-                stopSequenceItem = [
-                        arrivalTime: nextStationArrival,
-                        departureTime: fromTrainTime,
-                        stopId: nextStation,
-                        stopSequence: fromStationId - nextStation
                 ]
                 stopSequence << stopSequenceItem
+                while(nextStation>toStationId){
+                    nextStation = nextStation - 1
+                    nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
+                    nextStationArrival = nextStationSchedule.find({
+                        try{
+                            if(it.isAfter(nextStationArrival)) it
+                        } catch (NullPointerException npe){
+                            null
+                        }
+                    })
+
+                    if(nextStationArrival){
+                        stopSequenceItem = [
+                                arrivalTime: nextStationArrival,
+                                departureTime: fromTrainTime,
+                                stopId: nextStation,
+                                stopSequence: fromStationId - nextStation
+                        ]
+                        stopSequence << stopSequenceItem
+                    }
+                }
+                return stopSequence
             }
-            return stopSequence
         }
 
         if(direction=="to_sagrado"){
             assert (toStationId>fromStationId)
             int nextStation = fromStationId+1
             def nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
-            def nextStationArrival = nextStationSchedule.find({if(it.isAfter(fromTrainTime)) it})
-            def stopSequenceItem = [
-                    arrivalTime: nextStationArrival,
-                    departureTime: fromTrainTime,
-                    stopId: nextStation,
-                    stopSequence: nextStation - fromStationId
-            ]
 
-            stopSequence << stopSequenceItem
-            while(nextStation<toStationId){
-                nextStation = nextStation + 1
-                nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
-                nextStationArrival = nextStationSchedule.find({if(it.isAfter(nextStationArrival)) it})
-
+            def nextStationArrival = nextStationSchedule.find({
+                try{
+                    if(it.isAfter(fromTrainTime)) it
+                } catch (NullPointerException npe){
+                    null
+                }
+            })
+            def stopSequenceItem = null
+            if(nextStationArrival){
                 stopSequenceItem = [
                         arrivalTime: nextStationArrival,
                         departureTime: fromTrainTime,
                         stopId: nextStation,
                         stopSequence: nextStation - fromStationId
                 ]
-
                 stopSequence << stopSequenceItem
+            }
+
+            while(nextStation<toStationId){
+                nextStation = nextStation + 1
+                nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
+                nextStationArrival = nextStationSchedule.find({
+                            try{
+                                if(it.isAfter(nextStationArrival)) it
+                            } catch(NullPointerException npe){
+                                    null
+                            }
+                         })
+
+                if(nextStationArrival){
+                    stopSequenceItem = [
+                            arrivalTime: nextStationArrival,
+                            departureTime: fromTrainTime,
+                            stopId: nextStation,
+                            stopSequence: nextStation - fromStationId
+                    ]
+
+                    stopSequence << stopSequenceItem
+                }
             }
             return stopSequence
         }

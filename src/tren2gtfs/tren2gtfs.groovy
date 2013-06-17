@@ -515,7 +515,7 @@ def createCalendarTxt(def calendar){
     calendarTxt.newWriter()
     calendarTxt << ("service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date") << "\r\n"
     calendar.each { CalendarItem calendarItem ->
-        calendarTxt << (calendarItem.service_id?calendarItem.serviceId+",":",")
+        calendarTxt << (calendarItem.serviceId?calendarItem.serviceId+",":",")
         calendarTxt << (calendarItem.monday?calendarItem.monday+",":",")
         calendarTxt << (calendarItem.tuesday?calendarItem.tuesday+",":",")
         calendarTxt << (calendarItem.wednesday?calendarItem.wednesday+",":",")
@@ -523,8 +523,8 @@ def createCalendarTxt(def calendar){
         calendarTxt << (calendarItem.friday?calendarItem.friday+",":",")
         calendarTxt << (calendarItem.saturday?calendarItem.saturday+",":",")
         calendarTxt << (calendarItem.sunday?calendarItem.sunday+",":",")
-        calendarTxt << (calendarItem.start_date?calendarItem.startDate+",":",")
-        calendarTxt << (calendarItem.end_date?calendarItem.endDate+",":",") << "\r\n"
+        calendarTxt << (calendarItem.startDate?calendarItem.startDate+",":",")
+        calendarTxt << (calendarItem.endDate?calendarItem.endDate+",":",") << "\r\n"
     }
 
 }
