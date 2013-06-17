@@ -326,6 +326,8 @@ routeTrenUrbano = new Route (
 
 debug = true
 
+dayTypes = ["LOW_SEASON_WORKDAY", "RESTDAY", "WORKDAY"]
+
 /******/
 
 TrainGlobals.globals['debug'] = debug
@@ -359,9 +361,9 @@ createAgencyTxt(agency)
 stopCollection = new StopCollection()
 createStopsTxt(stopCollection.getTheStops())
 createRoutesTxt(routes)
-def trips = createTripsTxt(StopCollection.getTheStops())
+def trips = createTripsTxt(StopCollection.getTheStops(), dayTypes)
 
-TrainSchedule ts = new TrainSchedule("${resourcesFolder}/${trainScheduleFileName}", stopCollection, timezone).readScheduleFromTrainArrivals()
+//TrainSchedule ts = new TrainSchedule("${resourcesFolder}/${trainScheduleFileName}", stopCollection, timezone).readScheduleFromTrainArrivals()
 //readTrainScheduleFile()
 //def stopTimes = readStopTimesFromDtopWebsite(trips)
 //printStopTimes(stopTimes)
@@ -424,7 +426,7 @@ def createRoutesTxt(def routes){
 
 }
 
-def createTripsTxt(stops){
+def createTripsTxt(stops, dayTypes){
     def printTrip = {theFile, trip ->
         theFile << trip.routeId+","
         theFile << trip.serviceId+","
@@ -443,40 +445,42 @@ def createTripsTxt(stops){
     int count = 0;
     for(int startId=1; startId<= stops.size(); startId++){
         Stop theStart = StopCollection.getStopFromId(startId)
-        if(startId < stops.size()){
-            for (int stopId=startId+1; stopId<=stops.size(); stopId++){
-                Stop theStop = StopCollection.getStopFromId(stopId)
-                Trip trip = new Trip();
-                trip.startStop = theStart
-                trip.endStop = theStop
-                trip.routeId = ((Route) routes[0]).routeId
-                trip.serviceId = "LOW_SEASON_WORKDAY"
-                trip.tripId = "${++count}"
-                trip.tripHeadsign = theStop.stopName
-                trip.tripShortName = "${theStart.stopName} / ${theStop.stopName}"
-                trip.directionId = "0"
-                trip.blockId = ""
-                trip.shapeId = ""
-                trip.wheelchairAccessible = ""
-                trips << trip
+        dayTypes.each {dayType ->
+            if(startId < stops.size()){
+                for (int stopId=startId+1; stopId<=stops.size(); stopId++){
+                    Stop theStop = StopCollection.getStopFromId(stopId)
+                    Trip trip = new Trip();
+                    trip.startStop = theStart
+                    trip.endStop = theStop
+                    trip.routeId = ((Route) routes[0]).routeId
+                    trip.serviceId = dayType
+                    trip.tripId = "${++count}"
+                    trip.tripHeadsign = theStop.stopName
+                    trip.tripShortName = "${theStart.stopName} / ${theStop.stopName}"
+                    trip.directionId = "TO_SAGRADO"
+                    trip.blockId = ""
+                    trip.shapeId = ""
+                    trip.wheelchairAccessible = ""
+                    trips << trip
+                }
             }
-        }
-        if(startId > 1){
-            for (int stopId = startId -1; stopId >=1; stopId--){
-                Stop theStop = StopCollection.getStopFromId(stopId)
-                Trip trip = new Trip();
-                trip.startStop = theStart
-                trip.endStop = theStop
-                trip.routeId = ((Route) routes[0]).routeId
-                trip.serviceId = "LOW_SEASON_WORKDAY"
-                trip.tripId = "${++count}"
-                trip.tripHeadsign = theStop.stopName
-                trip.tripShortName = "${theStart.stopName} / ${theStop.stopName}"
-                trip.directionId = "1"
-                trip.blockId = ""
-                trip.shapeId = ""
-                trip.wheelchairAccessible = ""
-                trips << trip
+            if(startId > 1){
+                for (int stopId = startId -1; stopId >=1; stopId--){
+                    Stop theStop = StopCollection.getStopFromId(stopId)
+                    Trip trip = new Trip();
+                    trip.startStop = theStart
+                    trip.endStop = theStop
+                    trip.routeId = ((Route) routes[0]).routeId
+                    trip.serviceId = dayType
+                    trip.tripId = "${++count}"
+                    trip.tripHeadsign = theStop.stopName
+                    trip.tripShortName = "${theStart.stopName} / ${theStop.stopName}"
+                    trip.directionId = "TO_BAYAMON"
+                    trip.blockId = ""
+                    trip.shapeId = ""
+                    trip.wheelchairAccessible = ""
+                    trips << trip
+                }
             }
         }
     }
