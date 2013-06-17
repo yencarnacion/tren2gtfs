@@ -331,7 +331,7 @@ dayTypes = ["LOW_SEASON_WORKDAY", "RESTDAY", "WORKDAY"]
 calendar = []
 
 low_season_workday = new CalendarItem(
-         service_id: "LOW_SEASON_WORKDAY",
+         serviceId: "LOW_SEASON_WORKDAY",
          monday: 1,
          tuesday: 1,
          wednesday: 1,
@@ -339,14 +339,14 @@ low_season_workday = new CalendarItem(
          friday: 1,
          saturday: 0,
          sunday: 0,
-         start_date: '20130601',
-         end_date: '20130731'
+         startDate: '20130601',
+         endDate: '20130731'
 )
 
 calendar << low_season_workday
 
 restday = new CalendarItem(
-        service_id: "RESTDAY",
+        serviceId: "RESTDAY",
         monday: 0,
         tuesday: 0,
         wednesday: 0,
@@ -354,8 +354,8 @@ restday = new CalendarItem(
         friday: 0,
         saturday: 1,
         sunday: 1,
-        start_date: '20130101',
-        end_date: '20131231'
+        startDate: '20130101',
+        endDate: '20131231'
 )
 
 calendar << restday
