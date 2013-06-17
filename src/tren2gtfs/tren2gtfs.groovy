@@ -510,10 +510,12 @@ def createZipFile(){
         def buffer = new byte[1024]
         def file = new File("${resourcesFolder}/${fileName}")
         file.withInputStream { i ->
-            def l = i.read(buffer)
+            def l = 0
+            while(l = i.read(buffer)){
             // check wether the file is empty
-            if (l > 0) {
-                zipFile.write(buffer, 0, l)
+                if (l > 0) {
+                    zipFile.write(buffer, 0, l)
+                }
             }
         }
         zipFile.closeEntry()
@@ -535,7 +537,7 @@ def createCalendarTxt(def calendar){
         calendarTxt << (calendarItem.saturday?calendarItem.saturday+",":",")
         calendarTxt << (calendarItem.sunday?calendarItem.sunday+",":",")
         calendarTxt << (calendarItem.startDate?calendarItem.startDate+",":",")
-        calendarTxt << (calendarItem.endDate?calendarItem.endDate+",":",") << "\r\n"
+        calendarTxt << (calendarItem.endDate?calendarItem.endDate:"") << "\r\n"
     }
 
 }
@@ -679,12 +681,12 @@ def createCalendarTxt(def calendar){
 //
 //}
 
-stopTime = new DateTime(DateTimeZone.forID(agency_timezone))
-Period p = new Period(startTime, stopTime);
+stopTime = new DateTime(DateTimeZone.forID(timezone))
+//Period p = new Period(startTime, stopTime);
 println "-----------------------------------"
 println "Start Time: "+startTime.toString()
 println "Stop Time: "+stopTime.toString()
-println "Time elapsed: "+p.toString()
+//println "Time elapsed: "+p.toString()
 println "-----------------------------------"
 
 
