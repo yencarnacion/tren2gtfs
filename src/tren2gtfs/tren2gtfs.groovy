@@ -23,7 +23,7 @@ import org.joda.time.Period
  zipFileName = "TREN2GTFS.zip"
  agency_id = 'TREN'
  agency_name = 'Tren Urbano'
- agency_url = 'www.dtop.gov.pr'
+ agency_url = 'http://www.dtop.gov.pr'
 
  agency_lang = null
  agency_phone = null
@@ -435,7 +435,7 @@ createZipFile()
 def createAgencyTxt(def agency){
     def agencyTxt = new File("${resourcesFolder}/${agencyFileName}")
     agencyTxt.newWriter()
-    agencyTxt << ("agency_id, agency_name,agency_url,agency_timezone,agency_phone,agency_lang") << "\r\n"
+    agencyTxt << ("agency_id,agency_name,agency_url,agency_timezone,agency_lang,agency_phone,agency_fare_url") << "\r\n"
     agencyTxt << (agency.agencyId?agency.agencyId+",":",")
     assert(agency.agencyName)
     agencyTxt << (agency.agencyName?agency.agencyName+",":",")
@@ -473,7 +473,7 @@ def createStopsTxt(def stops){
 def createRoutesTxt(def routes){
     def routesTxt = new File ("${resourcesFolder}/${routesFileName}")
     routesTxt.newWriter()
-    routesTxt << ("route_id,route_short_name,route_long_name,route_desc,route_type") << "\r\n"
+    routesTxt << ("route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_url,route_color,route_text_color") << "\r\n"
     routes.each { route ->
         routesTxt << (route.routeId?route.routeId+",":",")
         routesTxt << (route.agencyId?route.agencyId+",":",")
@@ -483,7 +483,7 @@ def createRoutesTxt(def routes){
         routesTxt << (route.routeType?route.routeType+",":",")
         routesTxt << (route.routeUrl?route.routeUrl+",":",")
         routesTxt << (route.routecolor?route.routecolor+",":",")
-        routesTxt << (route.routeTextColor?route.routeTextColor+",":",") << "\r\n"
+        routesTxt << (route.routeTextColor?route.routeTextColor:"") << "\r\n"
     }
 
 }
