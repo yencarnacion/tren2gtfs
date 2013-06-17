@@ -6,6 +6,9 @@ package tren2gtfs
 import java.util.zip.ZipOutputStream
 import java.util.zip.ZipEntry
 
+ resourcesFolder = "../resources"
+ trainScheduleFileName =  "trainschedule.csv"
+
  zipFileName = "TREN2GTFS.zip"
  agency_id = 'TREN'
  agency_name = 'Tren Urbano'
@@ -14,7 +17,6 @@ import java.util.zip.ZipEntry
  agency_lang = null
  agency_phone = null
  agency_fare_url = null
- trainScheduleFileName =  "trainschedule.csv"
 
 
 class StopCollection {
@@ -310,9 +312,6 @@ class StopCollection {
 
 }
 
- /********/
-
-
 routeTrenUrbano = new Route (
     routeId: "RUTA_TREN",
     agencyId: agency_id,
@@ -325,11 +324,16 @@ routeTrenUrbano = new Route (
     routeTextColor: ""
 )
 
+debug = true
+
+/******/
+
+TrainGlobals.globals['debug'] = debug
+timezone = agency_timezone
+
 routes = []
 routes << routeTrenUrbano
 
-
- resourcesFolder = "../resources"
  agencyFileName = "agency.txt"
  stopsFileName = "stops.txt"
  routesFileName = "routes.txt"
@@ -344,7 +348,6 @@ routes << routeTrenUrbano
          stopTimesFileName
       ]
 
-
 agency = new Agency(agencyId: agency_id,
                     agencyName: agency_name,
                     agencyUrl: agency_url,
@@ -353,14 +356,17 @@ agency = new Agency(agencyId: agency_id,
                     agencyPhone: agency_phone,
                     agencyFareUrl: agency_fare_url)
 createAgencyTxt(agency)
-createStopsTxt(stops)
+stopCollection = new StopCollection()
+createStopsTxt(stopCollection.getTheStops())
 createRoutesTxt(routes)
-def trips = createTripsTxt()
-//readTrainScheduleFile()
-def stopTimes = readStopTimesFromDtopWebsite(trips)
-printStopTimes(stopTimes)
-createZipFile()
+def trips = createTripsTxt(StopCollection.getTheStops())
 
+TrainSchedule ts = new TrainSchedule("${resourcesFolder}/${trainScheduleFileName}", stopCollection, timezone).readScheduleFromTrainArrivals()
+//readTrainScheduleFile()
+//def stopTimes = readStopTimesFromDtopWebsite(trips)
+//printStopTimes(stopTimes)
+createStopTimesTxt()
+createZipFile()
 
 def createAgencyTxt(def agency){
     def agencyTxt = new File("${resourcesFolder}/${agencyFileName}")
@@ -418,11 +424,7 @@ def createRoutesTxt(def routes){
 
 }
 
-Stop getStopFromNumber(int i){
-    stops.find{stop -> if(stop.stopId == "${i}") return stop}
-}
-
-def createTripsTxt(){
+def createTripsTxt(stops){
     def printTrip = {theFile, trip ->
         theFile << trip.routeId+","
         theFile << trip.serviceId+","
@@ -440,10 +442,10 @@ def createTripsTxt(){
 
     int count = 0;
     for(int startId=1; startId<= stops.size(); startId++){
-        Stop theStart = getStopFromNumber(startId)
+        Stop theStart = StopCollection.getStopFromId(startId)
         if(startId < stops.size()){
             for (int stopId=startId+1; stopId<=stops.size(); stopId++){
-                Stop theStop = getStopFromNumber(stopId)
+                Stop theStop = StopCollection.getStopFromId(stopId)
                 Trip trip = new Trip();
                 trip.startStop = theStart
                 trip.endStop = theStop
@@ -461,7 +463,7 @@ def createTripsTxt(){
         }
         if(startId > 1){
             for (int stopId = startId -1; stopId >=1; stopId--){
-                Stop theStop = getStopFromNumber(stopId)
+                Stop theStop = StopCollection.getStopFromId(stopId)
                 Trip trip = new Trip();
                 trip.startStop = theStart
                 trip.endStop = theStop
@@ -490,163 +492,25 @@ def createTripsTxt(){
     return trips
 }
 
-def readTrainScheduleFile() {
-
-    def trainScheduleFile = new File ("${resourcesFolder}/${trainScheduleFileName}")
-    def trainArrivals = []
-
-    trainScheduleFile.eachLine(1) { line ->
-        line = line.replace("\"","")
-        def (arrivesTo, direction, daytipe, arrivalTime) = line.split(",")
-        TrainArrival trainArrival = new TrainArrival(
-            arrivesTo: arrivesTo,
-            direction: direction,
-            daytipe: daytipe,
-            arrivalTime: arrivalTime
-        )
-        trainArrivals << trainArrival
-    }
-
-    /*for (TrainArrival t: trainArrivals){
-        println t.dump();
-    }*/
-
-}
-
-/**
- * Reads stop times from http://www.dtop.gov.pr/itinerario.asp
- */
-def readStopTimesFromDtopWebsite(def trips){
-    def trainScheduleUrlFrom = {direction, departStationId -> "http://tempo7.praxisinteractive.net/dtopweb/itinerario/departure.php?st_id=${direction}&pl_id=${departStationId}"}
-    def trainScheduleUrlDeparting = {direction, departStationId, trainId -> "http://tempo7.praxisinteractive.net/dtopweb/itinerario/plataforma2.php?st_id=${direction}&pl_id=${departStationId}&train_id=${trainId}"}
-    def trainScheduleUrlArrivalTime = {direction, departStationId, trainId, arriveStationId -> "http://tempo7.praxisinteractive.net/dtopweb/itinerario/arrival.php?st_id=${direction}&pl_id=${departStationId}&train_id=${trainId}&pl_id2=${arriveStationId}" }
-
-    WebConnectService webConnectService = new WebConnectService()
-    def stopTimes = []
-    def directions = ["1"]
-    for (String direction: directions) {
-        for(Stop startStop:stops){
-            println startStop.stopName+" : "
-            def pageWithDepartingTimes = webConnectService.doGetConnection(new URL(trainScheduleUrlFrom.call(direction, startStop.stopId)), "")
-            def page = TrenXmlParserFactory.getXmlParser().parseText(pageWithDepartingTimes.webpage);
-
-            def departTimes = page.depthFirst().getAt('OPTION')
-
-            int count = 0;
-
-            def departTimesList = []
-            departTimes.each{time ->
-                if(count == 0){
-                    count++
-                    return null
-                }
-                departTimesList << [trainId: time.depthFirst()[0]."@value", departureTime: time.value()[0] ]
-                println "departTime:"+time.depthFirst()[0]."@value" + "|" + time.value()[0]
-            }
-
-            departTimesList.each { departTime ->
-                println stops.size()
-                println startStop.stopId
-                Boolean doNotContinue = false;
-
-                    //println trainScheduleUrlDeparting.call(direction, stop.stopId, departTime['trainId'])
-                def pageWithArrivalStationText = webConnectService.doGetConnection(new URL(trainScheduleUrlDeparting.call(direction, startStop.stopId, departTime['trainId'])), "")
-
-                println pageWithArrivalStationText
-                def pageWithArrivalStationXml = TrenXmlParserFactory.getXmlParser().parseText(pageWithArrivalStationText.webpage);
-                def arrivalStations = pageWithArrivalStationXml.depthFirst().getAt('OPTION')
-
-                def arrivalStationsList = []
-                int countArrivalStations = 0
-                arrivalStations.each{ arrivalStation ->
-                    if(countArrivalStations == 0){
-                        countArrivalStations++
-                        return null
-                    }
-                    //def station = arrivalStation.depthFirst()[0].value()[0]
-                    //if(station != "[ Seleccione ]"){
-                        def arrivalStationMap = [station: arrivalStation.depthFirst()[0].value()[0], value: arrivalStation.depthFirst()[0].@"value"]
-                        arrivalStationsList << arrivalStationMap
-                        println arrivalStationMap
-                        println arrivalStationMap.station +" | "+arrivalStationMap.value
-                        //}
-                }
-
-                arrivalStationsList.each { arrivalStation ->
-                   println trainScheduleUrlArrivalTime.call(direction, startStop.stopId, departTime['trainId'], arrivalStation.value)
-                   def pageWithArrivalTimeText = webConnectService.doGetConnection(new URL(
-                           trainScheduleUrlArrivalTime.call(direction, startStop.stopId, departTime['trainId'], arrivalStation.value)
-                        ), "")
-                    //def pageWithArrivalTimeXml = TrenXmlParserFactory.getXmlParser().parseText(pageWithArrivalTimeText.webpage);
-                    //def arrivalTime = pageWithArrivalTimeXml.depthFirst()
-                    println "*****Arrival Time:"+ pageWithArrivalTimeText.webpage+"*****\n"
-                    def at = pageWithArrivalTimeText.webpage
-
-                    def calculateStopSequence = {Stop beginStop, Stop finishStop ->
-                        int beginStopInt = new Integer(beginStop.stopId)
-                        int endStopInt = new Integer(finishStop.stopId)
-                        if(beginStopInt > endStopInt){
-                            beginStopInt - endStopInt
-                        } else if (endStopInt > beginStopInt) {
-                            endStopInt - beginStopInt
-                        } else {
-                            assert false: "Beginning and End Stop should not be the same.  Received: beginStop = ${beginStopInt}; endStop = ${endStopInt} "
-                        }
-
-                    }
-                    def finishStop = getStopFromNumber(new Integer((String)arrivalStation.value))
-                    def stopTime = new StopTime(
-                             tripId: getTripFromStartStopAndEndStop(trips, startStop, finishStop),
-                             arrivalTime: at,
-                             departureTime: departTime,
-                             stopId: startStop.stopId,
-                             stopSequence: calculateStopSequence.call(startStop, finishStop)
-
-                    )
-                    stopTimes << stopTime
-
-                }
-                    //arrivalStation.each
-
-            }
-
-        }
-    }
-
-    return stopTimes
-
-}
-
-def printStopTimes(def stopTimes){
-    def printStopTime = {theFile, StopTime stopTime ->
-        theFile << stopTime.tripId+","
-        theFile << stopTime.arrivalTime+","
-        theFile << stopTime.departureTime+","
-        theFile << stopTime.stopId+","
-        theFile << stopTime.stopSequence << "\r\n"
-    }
-
-    def stopTimesTxt = new File ("${resourcesFolder}/${stopTimesFileName}")
+def createStopTimesTxt(){
+    def stopTimesTxt = new File("${resourcesFolder}/${stopTimesFileName}")
     stopTimesTxt.newWriter()
+    stopTimesTxt << ("trip_id, arrival_time,departure_time,stop_id,stop_sequence,stop_headsign,pickup_type,drop_off_type,shape_dist_traveled") << "\r\n"
 
-    stopTimesTxt << ("trip_id,arrival_time,departure_time,stop_id,stop_sequence") << '\r\n'
 
-    for(StopTime st: stopTimes){
-        printStopTime.call(stopTimesTxt,st)
-    }
-}
-
-Trip getTripFromStartStopAndEndStop(def trips, Stop startStop, Stop endStop){
-    for(Trip t: trips){
-        if(t.startStop.stopId == startStop.stopId && t.endStop.stopId == endStop.stopId){
-            return t
-        }
-    }
-
-    assert false: "No trip found!\nReceived:\nstartStop = [stopName=${startStop.stopName}, stopId=${startStop.stopId}]"+
-                    "endStop = [stopName=${endStop.stopName}, stopId=${endStop.stopId}]"
+//    agencyTxt << (agency.agencyId?agency.agencyId+",":",")
+//    assert(agency.agencyName)
+//    agencyTxt << (agency.agencyName?agency.agencyName+",":",")
+//    assert(agency.agencyUrl)
+//    agencyTxt << (agency.agencyUrl?agency.agencyUrl+",":",")
+//    assert(agency.agencyTimezone)
+//    agencyTxt << (agency.agencyTimezone?agency.agencyTimezone+",":",")
+//    agencyTxt << (agency.agencyLang?agency.agencyLanga+",":",")
+//    agencyTxt << (agency.agencyPhone?agency.agencyPhone+",":",")
+//    agencyTxt << (agency.agencyFareUrl?agency.agencyFareUrl:"") << "\r\n"
 
 }
+
 
 def createZipFile(){
     ZipOutputStream zipFile = new ZipOutputStream(new FileOutputStream("${resourcesFolder}/${zipFileName}"))
@@ -665,6 +529,146 @@ def createZipFile(){
     }
     zipFile.close()
 }
+
+//Stop getStopFromNumber(int i){
+//    stops.find{stop -> if(stop.stopId == "${i}") return stop}
+//}
+//
+///**
+// * Reads stop times from http://www.dtop.gov.pr/itinerario.asp
+// */
+//def readStopTimesFromDtopWebsite(def trips){
+//    def trainScheduleUrlFrom = {direction, departStationId -> "http://tempo7.praxisinteractive.net/dtopweb/itinerario/departure.php?st_id=${direction}&pl_id=${departStationId}"}
+//    def trainScheduleUrlDeparting = {direction, departStationId, trainId -> "http://tempo7.praxisinteractive.net/dtopweb/itinerario/plataforma2.php?st_id=${direction}&pl_id=${departStationId}&train_id=${trainId}"}
+//    def trainScheduleUrlArrivalTime = {direction, departStationId, trainId, arriveStationId -> "http://tempo7.praxisinteractive.net/dtopweb/itinerario/arrival.php?st_id=${direction}&pl_id=${departStationId}&train_id=${trainId}&pl_id2=${arriveStationId}" }
+//
+//    WebConnectService webConnectService = new WebConnectService()
+//    def stopTimes = []
+//    def directions = ["1"]
+//    for (String direction: directions) {
+//        for(Stop startStop:stops){
+//            println startStop.stopName+" : "
+//            def pageWithDepartingTimes = webConnectService.doGetConnection(new URL(trainScheduleUrlFrom.call(direction, startStop.stopId)), "")
+//            def page = TrenXmlParserFactory.getXmlParser().parseText(pageWithDepartingTimes.webpage);
+//
+//            def departTimes = page.depthFirst().getAt('OPTION')
+//
+//            int count = 0;
+//
+//            def departTimesList = []
+//            departTimes.each{time ->
+//                if(count == 0){
+//                    count++
+//                    return null
+//                }
+//                departTimesList << [trainId: time.depthFirst()[0]."@value", departureTime: time.value()[0] ]
+//                println "departTime:"+time.depthFirst()[0]."@value" + "|" + time.value()[0]
+//            }
+//
+//            departTimesList.each { departTime ->
+//                println stops.size()
+//                println startStop.stopId
+//                Boolean doNotContinue = false;
+//
+//                    //println trainScheduleUrlDeparting.call(direction, stop.stopId, departTime['trainId'])
+//                def pageWithArrivalStationText = webConnectService.doGetConnection(new URL(trainScheduleUrlDeparting.call(direction, startStop.stopId, departTime['trainId'])), "")
+//
+//                println pageWithArrivalStationText
+//                def pageWithArrivalStationXml = TrenXmlParserFactory.getXmlParser().parseText(pageWithArrivalStationText.webpage);
+//                def arrivalStations = pageWithArrivalStationXml.depthFirst().getAt('OPTION')
+//
+//                def arrivalStationsList = []
+//                int countArrivalStations = 0
+//                arrivalStations.each{ arrivalStation ->
+//                    if(countArrivalStations == 0){
+//                        countArrivalStations++
+//                        return null
+//                    }
+//                    //def station = arrivalStation.depthFirst()[0].value()[0]
+//                    //if(station != "[ Seleccione ]"){
+//                        def arrivalStationMap = [station: arrivalStation.depthFirst()[0].value()[0], value: arrivalStation.depthFirst()[0].@"value"]
+//                        arrivalStationsList << arrivalStationMap
+//                        println arrivalStationMap
+//                        println arrivalStationMap.station +" | "+arrivalStationMap.value
+//                        //}
+//                }
+//
+//                arrivalStationsList.each { arrivalStation ->
+//                   println trainScheduleUrlArrivalTime.call(direction, startStop.stopId, departTime['trainId'], arrivalStation.value)
+//                   def pageWithArrivalTimeText = webConnectService.doGetConnection(new URL(
+//                           trainScheduleUrlArrivalTime.call(direction, startStop.stopId, departTime['trainId'], arrivalStation.value)
+//                        ), "")
+//                    //def pageWithArrivalTimeXml = TrenXmlParserFactory.getXmlParser().parseText(pageWithArrivalTimeText.webpage);
+//                    //def arrivalTime = pageWithArrivalTimeXml.depthFirst()
+//                    println "*****Arrival Time:"+ pageWithArrivalTimeText.webpage+"*****\n"
+//                    def at = pageWithArrivalTimeText.webpage
+//
+//                    def calculateStopSequence = {Stop beginStop, Stop finishStop ->
+//                        int beginStopInt = new Integer(beginStop.stopId)
+//                        int endStopInt = new Integer(finishStop.stopId)
+//                        if(beginStopInt > endStopInt){
+//                            beginStopInt - endStopInt
+//                        } else if (endStopInt > beginStopInt) {
+//                            endStopInt - beginStopInt
+//                        } else {
+//                            assert false: "Beginning and End Stop should not be the same.  Received: beginStop = ${beginStopInt}; endStop = ${endStopInt} "
+//                        }
+//
+//                    }
+//                    def finishStop = getStopFromNumber(new Integer((String)arrivalStation.value))
+//                    def stopTime = new StopTime(
+//                             tripId: getTripFromStartStopAndEndStop(trips, startStop, finishStop),
+//                             arrivalTime: at,
+//                             departureTime: departTime,
+//                             stopId: startStop.stopId,
+//                             stopSequence: calculateStopSequence.call(startStop, finishStop)
+//
+//                    )
+//                    stopTimes << stopTime
+//
+//                }
+//                    //arrivalStation.each
+//
+//            }
+//
+//        }
+//    }
+//
+//    return stopTimes
+//
+//}
+//
+//def printStopTimes(def stopTimes){
+//    def printStopTime = {theFile, StopTime stopTime ->
+//        theFile << stopTime.tripId+","
+//        theFile << stopTime.arrivalTime+","
+//        theFile << stopTime.departureTime+","
+//        theFile << stopTime.stopId+","
+//        theFile << stopTime.stopSequence << "\r\n"
+//    }
+//
+//    def stopTimesTxt = new File ("${resourcesFolder}/${stopTimesFileName}")
+//    stopTimesTxt.newWriter()
+//
+//    stopTimesTxt << ("trip_id,arrival_time,departure_time,stop_id,stop_sequence") << '\r\n'
+//
+//    for(StopTime st: stopTimes){
+//        printStopTime.call(stopTimesTxt,st)
+//    }
+//}
+//
+//Trip getTripFromStartStopAndEndStop(def trips, Stop startStop, Stop endStop){
+//    for(Trip t: trips){
+//        if(t.startStop.stopId == startStop.stopId && t.endStop.stopId == endStop.stopId){
+//            return t
+//        }
+//    }
+//
+//    assert false: "No trip found!\nReceived:\nstartStop = [stopName=${startStop.stopName}, stopId=${startStop.stopId}]"+
+//                    "endStop = [stopName=${endStop.stopName}, stopId=${endStop.stopId}]"
+//
+//}
+
 
 
 

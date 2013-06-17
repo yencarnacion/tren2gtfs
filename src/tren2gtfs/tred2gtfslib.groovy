@@ -82,7 +82,10 @@ class TrainLocalTime implements Comparable<TrainLocalTime> {
     int trainLocalSecondI
     boolean nextDay = false
     String trainLocalTimeZone = "America/Puerto_Rico"
-    TrainLocalTime(String trainLocalTimeS){
+
+    TrainLocalTime(String trainLocalTimeS, tz="America/Puerto_Rico"){
+        trainLocalTimeZone = tz
+
         def (hour, minute, second) = trainLocalTimeS.split(":")
 
         int hourInt = ((String) hour).toInteger()
@@ -204,9 +207,15 @@ class TrainLocalTime implements Comparable<TrainLocalTime> {
 class TrainSchedule {
     private def trainScheduleFileName
     private def trainArrivals = []
+    private def dayTypes = []
+    private def directions = []
+    private Object stopCollection
+    private def timeZone = "America/Puerto_Rico"
 
-    TrainSchedule(file){
+    TrainSchedule(String file, Object stopCollection, String tz="America/Puerto_Rico"){
         trainScheduleFileName = "${file}"
+        timeZone = tz
+        this.stopCollection = stopCollection
         readTrainScheduleFile()
         this
     }
@@ -217,21 +226,32 @@ class TrainSchedule {
         trainScheduleFile.eachLine() { line, lineNo ->
             if (lineNo>1) {
                 line = line.replace("\"","")
-                def( arrivesTo, direction, daytipe, arrivalTime) = line.split(",")
+                def( arrivesTo, direction, daytype, arrivalTime) = line.split(",")
                 TrainArrival trainArrival = new TrainArrival(
                         arrivesTo: ((String) arrivesTo).toLowerCase(),
                         direction: ((String) direction).toLowerCase(),
-                        daytype: ((String) daytipe).toLowerCase(),
+                        daytype: ((String) daytype).toLowerCase(),
                         arrivalTime: ((String) arrivalTime).toLowerCase()
                 )
+                if(!(daytype in dayTypes)){
+                    dayTypes << daytype
+                }
+                if(!(direction in directions)){
+                    directions << ((String) direction).toLowerCase()
+                }
                 trainArrivals << trainArrival
             }
         }
 
-        println "Read ${trainArrivals.size()} schedules"
+        if(TrainGlobals.globals['debug']){
+            println "Read the following daytypes: "+dayTypes.each{it}
+            println "Read the following directions: "+directions.each{it}
+            println "Read ${trainArrivals.size()} schedules"
         /*for (TrainArrival t: trainArrivals){
             println t.dump();
         }*/
+        }
+
         return trainArrivals
     }
 
@@ -239,15 +259,11 @@ class TrainSchedule {
      * Reads stop times from http://www.dtop.gov.pr/itinerario.asp
      */
     def readScheduleFromTrainArrivals(){
-
-        def stops = StopCollection.getTheStops()
-
-        def directions = ['to_bayamon', 'to_sagrado']
-
+        def stops = stopCollection.getTheStops()
         int i=1;
         for (String direction: directions) {
             for(int startStationId = 1; startStationId <= stops.size(); startStationId++){
-                def startStopStation = StopCollection.getStopFromId(startStationId)
+                def startStopStation = stopCollection.getStopFromId(startStationId)
                 for(int stopStationId = 1; stopStationId <= stops.size(); stopStationId++){
 
                     //For Testing
@@ -260,16 +276,17 @@ class TrainSchedule {
                     if((direction == 'to_sagrado' && (startStationId < stopStationId) ) ||
                             (direction == 'to_bayamon' && (startStationId > stopStationId))
                     ){
-                        def stopStopStation = StopCollection.getStopFromId(stopStationId)
-                        def dayTypes = ["LOW_SEASON_WORKDAY","RESTDAY","WORKDAY"]
+                        def stopStopStation = stopCollection.getStopFromId(stopStationId)
                         dayTypes.each({daytype ->
                             def leavingTimes = getStopTrainScheduleTimes(startStopStation, direction, daytype)
                             leavingTimes.each({ leavingTime ->
                                 def arrivalTime = getStopTrainArrivalTime(startStationId, direction, leavingTime, stopStationId, daytype)
-                                println ">>>>>>>"
-                                println "[${i++}]-${daytype}-(${direction}) From ${startStopStation.stopName} To ${stopStopStation.stopName}"
-                                println "Leaves: ${leavingTime} and Arrives: ${arrivalTime}"
-                                println "<<<<<<<"
+                                if(TrainGlobals.globals['debug']){
+                                    println ">>>>>>>"
+                                    println "[${i++}]-${daytype}-(${direction}) From ${startStopStation.stopName} To ${stopStopStation.stopName}"
+                                    println "Leaves: ${leavingTime} and Arrives: ${arrivalTime}"
+                                    println "<<<<<<<"
+                                }
                             })
                         })
                     }
@@ -279,16 +296,16 @@ class TrainSchedule {
     }
 
     def getStopTrainArrivalTime(int fromStationId, direction, fromTrainTime, int toStationId, daytype){
-        def stops = StopCollection.getTheStops()
+        def stops = stopCollection.getTheStops()
 
         if(direction=="to_bayamon"){
             assert(fromStationId>toStationId)
             int nextStation = fromStationId-1
-            def nextStationSchedule = getStopTrainScheduleTimes(StopCollection.getStopFromId(nextStation), direction, daytype)
+            def nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
             def nextStationArrival = nextStationSchedule.find({if(it.isAfter(fromTrainTime)) it})
             while(nextStation>toStationId){
                 nextStation = nextStation - 1
-                nextStationSchedule = getStopTrainScheduleTimes(StopCollection.getStopFromId(nextStation), direction, daytype)
+                nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
                 nextStationArrival = nextStationSchedule.find({if(it.isAfter(nextStationArrival)) it})
             }
             return nextStationArrival
@@ -297,11 +314,11 @@ class TrainSchedule {
         if(direction=="to_sagrado"){
             assert (toStationId>fromStationId)
             int nextStation = fromStationId+1
-            def nextStationSchedule = getStopTrainScheduleTimes(StopCollection.getStopFromId(nextStation), direction, daytype)
+            def nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
             def nextStationArrival = nextStationSchedule.find({if(it.isAfter(fromTrainTime)) it})
             while(nextStation<toStationId){
                 nextStation = nextStation + 1
-                nextStationSchedule = getStopTrainScheduleTimes(StopCollection.getStopFromId(nextStation), direction, daytype)
+                nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
                 nextStationArrival = nextStationSchedule.find({if(it.isAfter(nextStationArrival)) it})
             }
             return nextStationArrival
@@ -319,7 +336,11 @@ class TrainSchedule {
                     trainArrival.direction.toUpperCase() == direction.toUpperCase() &&
                     trainArrival.daytype.toUpperCase() == daytype.toUpperCase() )
                 trainArrival
-        }).collect({new TrainLocalTime(it.arrivalTime)}).sort()
+        }).collect({new TrainLocalTime(it.arrivalTime, timeZone)}).sort()
     }
+}
+
+class TrainGlobals {
+    static def globals = [:]
 }
 
