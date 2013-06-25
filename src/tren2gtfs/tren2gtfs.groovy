@@ -13,6 +13,9 @@ import java.util.zip.ZipEntry
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.Period
+import org.joda.time.format.PeriodFormatterBuilder
+import org.joda.time.format.PeriodFormatter
+
 
  agency_timezone = 'America/Puerto_Rico'
 
@@ -51,8 +54,8 @@ class StopCollection {
                 stopCode: "",
                 stopName: "Sagrado Coraz\u00F3n",
                 stopDesc: "",
-                stopLat:"-66.05968D",
-                stopLon: "18.437642D",
+                stopLon:"-66.05968",
+                stopLat: "18.437642",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -67,8 +70,8 @@ class StopCollection {
                 stopCode: "",
                 stopName: "Hato Rey",
                 stopDesc: "",
-                stopLat:"-66.059985D",
-                stopLon: "18.430277D",
+                stopLon:"-66.059985",
+                stopLat: "18.430277",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -83,8 +86,8 @@ class StopCollection {
                 stopCode: "",
                 stopName: "Roosevelt",
                 stopDesc: "",
-                stopLat:"-66.058779D",
-                stopLon: "18.424528D",
+                stopLon:"-66.058779",
+                stopLat: "18.424528",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -99,8 +102,8 @@ class StopCollection {
                 stopCode: "",
                 stopName: "D\u00F3menech",
                 stopDesc: "",
-                stopLat:"-66.056338D",
-                stopLon: "18.416346D",
+                stopLon:"-66.056338",
+                stopLat: "18.416346",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -115,8 +118,8 @@ class StopCollection {
                 stopCode: "",
                 stopName: "Pi\u00F1ero",
                 stopDesc: "",
-                stopLat:"-66.055225D",
-                stopLon: "18.411693D",
+                stopLon:"-66.055225",
+                stopLat: "18.411693",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -131,8 +134,8 @@ class StopCollection {
                 stopCode: "",
                 stopName: "Universidad",
                 stopDesc: "",
-                stopLat:"-66.05193D",
-                stopLon: "18.406024D",
+                stopLon:"-66.05193",
+                stopLat: "18.406024",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -147,8 +150,8 @@ class StopCollection {
                 stopCode: "",
                 stopName: "Cupey",
                 stopDesc: "",
-                stopLat:"-66.063209D",
-                stopLon: "18.392124D",
+                stopLon:"-66.063209",
+                stopLat: "18.392124",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -162,8 +165,8 @@ class StopCollection {
                 stopCode: "",
                 stopName: "R\u00EDo Piedras",
                 stopDesc: "",
-                stopLat:"-66.052413D",
-                stopLon: "18.400251D",
+                stopLon:"-66.052413",
+                stopLat: "18.400251",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -178,8 +181,8 @@ class StopCollection {
                 stopCode: "",
                 stopName: "Centro M\u00E9dico",
                 stopDesc: "",
-                stopLat:"-66.075734D",
-                stopLon: "18.393167D",
+                stopLon:"-66.075734",
+                stopLat: "18.393167",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -194,8 +197,8 @@ class StopCollection {
                 stopCode: "",
                 stopName: "San Francisco",
                 stopDesc: "",
-                stopLat:"-66.084036D",
-                stopLon: "18.392307D",
+                stopLon:"-66.084036",
+                stopLat: "18.392307",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -210,8 +213,8 @@ class StopCollection {
                 stopCode: "",
                 stopName: "Las Lomas",
                 stopDesc: "",
-                stopLat:"-66.095176D",
-                stopLon: "18.392398D",
+                stopLon:"-66.095176",
+                stopLat: "18.392398",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -226,8 +229,8 @@ class StopCollection {
                 stopCode: "",
                 stopName: "Mart\u00EDnez Nadal",
                 stopDesc: "",
-                stopLat:"-66.102911D",
-                stopLon: "18.392811D",
+                stopLon:"-66.102911",
+                stopLat: "18.392811",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -242,8 +245,8 @@ class StopCollection {
                 stopCode: "",
                 stopName: "Torrimar",
                 stopDesc: "",
-                stopLat:"-66.120175D",
-                stopLon: "18.393597D",
+                stopLon:"-66.120175",
+                stopLat: "18.393597",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -259,8 +262,8 @@ class StopCollection {
                 stopCode: "",
                 stopName: "Jardines",
                 stopDesc: "",
-                stopLat:"-66.128919D",
-                stopLon: "18.395734D",
+                stopLon:"-66.128919",
+                stopLat: "18.395734",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -275,8 +278,8 @@ class StopCollection {
                 stopCode: "",
                 stopName: "Deportivo",
                 stopDesc: "",
-                stopLat:"-66.151249D",
-                stopLon: "18.395922D",
+                stopLon:"-66.151249",
+                stopLat: "18.395922",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -291,8 +294,8 @@ class StopCollection {
                 stopCode: "",
                 stopName: "Bayam\u00F3n",
                 stopDesc: "",
-                stopLat:"-66.153815D",
-                stopLon: "18.40095D",
+                stopLon:"-66.153815",
+                stopLat: "18.40095",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -421,19 +424,24 @@ createAgencyTxt(agency)
 stopCollection = new StopCollection()
 createStopsTxt(stopCollection.getTheStops())
 createRoutesTxt(routes)
-def trips = new Trips("${resourcesFolder}/${tripsFileName}", routes, StopCollection, dayTypes)
-trips.createTripsTxt()
+//def trips2 = new Trips2("${resourcesFolder}/output/${tripsFileName}", routes, StopCollection, dayTypes)
+//trips2.createTripsTxt()
 
-def stopTimes = new TrainSchedule("${resourcesFolder}/${trainScheduleFileName}", routes, stopCollection, trips, timezone).createStopTimesFromTrainArrivals()
+def retval = new TrainSchedule("${resourcesFolder}/input/${trainScheduleFileName}", routes, stopCollection, timezone).getStopTimesAndTripsFromTrainArrivals()
 //readTrainScheduleFile()
 //def stopTimes = readStopTimesFromDtopWebsite(trips)
 //printStopTimes(stopTimes)
-createStopTimesTxt(stopTimes)
+
+createStopTimesTxt(retval.stopTimes)
+
+def trips = new Trips("${resourcesFolder}/output/${tripsFileName}", retval.trips)
+trips.createTripsTxt()
+
 createCalendarTxt(calendar)
 createZipFile()
 
 def createAgencyTxt(def agency){
-    def agencyTxt = new File("${resourcesFolder}/${agencyFileName}")
+    def agencyTxt = new File("${resourcesFolder}/output/${agencyFileName}")
     agencyTxt.newWriter()
     agencyTxt << ("agency_id,agency_name,agency_url,agency_timezone,agency_lang,agency_phone,agency_fare_url") << "\r\n"
     agencyTxt << (agency.agencyId?agency.agencyId+",":",")
@@ -450,7 +458,7 @@ def createAgencyTxt(def agency){
 }
 
 def createStopsTxt(def stops){
-    def stopsTxt = new File("${resourcesFolder}/${stopsFileName}")
+    def stopsTxt = new File("${resourcesFolder}/output/${stopsFileName}")
     stopsTxt.newWriter()
     stopsTxt << ("stop_id,stop_code,stop_name,stop_desc,stop_lat,stop_lon,zone_id,stop_url,location_type,parent_station,stop_timezone,wheelchair_boarding") << "\r\n"
     stops.each { stop ->
@@ -471,7 +479,7 @@ def createStopsTxt(def stops){
 }
 
 def createRoutesTxt(def routes){
-    def routesTxt = new File ("${resourcesFolder}/${routesFileName}")
+    def routesTxt = new File ("${resourcesFolder}/output/${routesFileName}")
     routesTxt.newWriter()
     routesTxt << ("route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_url,route_color,route_text_color") << "\r\n"
     routes.each { route ->
@@ -489,7 +497,7 @@ def createRoutesTxt(def routes){
 }
 
 def createStopTimesTxt(stopTimes){
-    def stopTimesTxt = new File("${resourcesFolder}/${stopTimesFileName}")
+    def stopTimesTxt = new File("${resourcesFolder}/output/${stopTimesFileName}")
     stopTimesTxt.newWriter()
     stopTimesTxt << ("trip_id,arrival_time,departure_time,stop_id,stop_sequence,stop_headsign,pickup_type,drop_off_type,shape_dist_traveled") << "\r\n"
     stopTimes.each { StopTime stopTime ->
@@ -503,21 +511,10 @@ def createStopTimesTxt(stopTimes){
 }
 
 
-def createZipFile(){
-    ZipOutputStream zipFile = new ZipOutputStream(new FileOutputStream("${resourcesFolder}/${zipFileName}"))
-    tren2gtfsFiles.each() { fileName ->
-        zipFile.putNextEntry(new ZipEntry(fileName))
-        def file = new File("${resourcesFolder}/${fileName}")
-        file.withInputStream { i ->
-            zipFile << i
-        }
-        zipFile.closeEntry()
-    }
-    zipFile.close()
-}
+
 
 def createCalendarTxt(def calendar){
-    def calendarTxt = new File("${resourcesFolder}/${calendarFileName}")
+    def calendarTxt = new File("${resourcesFolder}/output/${calendarFileName}")
     calendarTxt.newWriter()
     calendarTxt << ("service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date") << "\r\n"
     calendar.each { CalendarItem calendarItem ->
@@ -533,6 +530,19 @@ def createCalendarTxt(def calendar){
         calendarTxt << (calendarItem.endDate?calendarItem.endDate:"") << "\r\n"
     }
 
+}
+
+def createZipFile(){
+    ZipOutputStream zipFile = new ZipOutputStream(new FileOutputStream("${resourcesFolder}/output/${zipFileName}"))
+    tren2gtfsFiles.each() { fileName ->
+        zipFile.putNextEntry(new ZipEntry(fileName))
+        def file = new File("${resourcesFolder}/output/${fileName}")
+        file.withInputStream { i ->
+            zipFile << i
+        }
+        zipFile.closeEntry()
+    }
+    zipFile.close()
 }
 
 //Stop getStopFromNumber(int i){
@@ -652,7 +662,7 @@ def createCalendarTxt(def calendar){
 //        theFile << stopTime.stopSequence << "\r\n"
 //    }
 //
-//    def stopTimesTxt = new File ("${resourcesFolder}/${stopTimesFileName}")
+//    def stopTimesTxt = new File ("${resourcesFolder}/output/${stopTimesFileName}")
 //    stopTimesTxt.newWriter()
 //
 //    stopTimesTxt << ("trip_id,arrival_time,departure_time,stop_id,stop_sequence") << '\r\n'
@@ -674,12 +684,22 @@ def createCalendarTxt(def calendar){
 //
 //}
 
-stopTime = new DateTime(DateTimeZone.forID(timezone))
-//Period p = new Period(startTime, stopTime);
+stopTime = new DateTime(DateTimeZone.forID(agency_timezone))
+Period period = new Period(startTime, stopTime);
 println "-----------------------------------"
-println "Start Time: "+startTime.toString("HH:mm:ss")
-println "Stop Time: "+stopTime.toString("HH:mm:ss")
-//println "Time elapsed: "+p.toString()
+PeriodFormatter formatter = new PeriodFormatterBuilder()
+        .appendSeconds().appendSuffix(" seconds\n")
+        .appendMinutes().appendSuffix(" minutes\n")
+        .appendHours().appendSuffix(" hours\n")
+        .appendDays().appendSuffix(" days\n")
+        .appendWeeks().appendSuffix(" weeks\n")
+        .appendMonths().appendSuffix(" months\n")
+        .appendYears().appendSuffix(" years\n")
+        .printZeroNever()
+        .toFormatter();
+
+String elapsed = formatter.print(period);
+println "It took:\n"+elapsed+"To create ${zipFileName}"
 println "-----------------------------------"
 
 
