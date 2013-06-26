@@ -148,10 +148,10 @@ class StopCollection {
                 codeName: "rio_piedras",
                 stopId: "10",
                 stopCode: "",
-                stopName: "Cupey",
+                stopName: "R\u00EDo Piedras",
                 stopDesc: "",
-                stopLon:"-66.063209",
-                stopLat: "18.392124",
+                stopLon:"-66.052413",
+                stopLat: "18.400251",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -163,10 +163,10 @@ class StopCollection {
                 codeName: "cupey",
                 stopId: "9",
                 stopCode: "",
-                stopName: "R\u00EDo Piedras",
+                stopName: "Cupey",
                 stopDesc: "",
-                stopLon:"-66.052413",
-                stopLat: "18.400251",
+                stopLon:"-66.063209",
+                stopLat: "18.392124",
                 zoneId: "",
                 stopUrl: "",
                 locationType: "",
@@ -333,7 +333,7 @@ routeTrenUrbano = new Route (
     routeLongName: "Ruta del Tren Urbano",
     routeDesc: "Ruta del Tren Urbano de Puerto Rico",
     routeType: "1",
-    routeUrl: "www.dtop.gov.pr",
+    routeUrl: "http://www.dtop.gov.pr",
     routecolor: "",
     routeTextColor: ""
 )
@@ -432,9 +432,12 @@ def retval = new TrainSchedule("${resourcesFolder}/input/${trainScheduleFileName
 //def stopTimes = readStopTimesFromDtopWebsite(trips)
 //printStopTimes(stopTimes)
 
+println "Creating ${stopTimesFileName}"
 createStopTimesTxt(retval.stopTimes)
 
 def trips = new Trips("${resourcesFolder}/output/${tripsFileName}", retval.trips)
+
+println "Creating ${tripsFileName}"
 trips.createTripsTxt()
 
 createCalendarTxt(calendar)
