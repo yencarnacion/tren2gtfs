@@ -31,4 +31,4 @@ frequencies.txt
 transfers.txt
 feed_info.txt
 TREN2GTFS.zip
-/ignore/
+/ignore/*
