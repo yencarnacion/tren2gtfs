@@ -2,12 +2,7 @@ package tren2gtfs
 /**
  * Created by yamir on 6/6/13.
  */
-@Grab(
-        group='joda-time',
-        module='joda-time',
-        version='2.2'
-)
-@GrabExclude('xml-apis:xml-apis')
+
 import java.util.zip.ZipOutputStream
 import java.util.zip.ZipEntry
 import org.joda.time.DateTime
@@ -16,12 +11,24 @@ import org.joda.time.Period
 import org.joda.time.format.PeriodFormatterBuilder
 import org.joda.time.format.PeriodFormatter
 
-
  agency_timezone = 'America/Puerto_Rico'
 
+//*TODO delete Yamir
+def localtraintime = new TrainLocalTime("00:11:11", 'America/Puerto_Rico')
+def st = true
+//TODO delete yamir
+
  startTime = new DateTime(DateTimeZone.forID(agency_timezone))
- resourcesFolder = "../resources"
- trainScheduleFileName =  "trainschedule.csv"
+ // resourcesFolder = "src/main/resources"
+// resourcesFolder = ""
+// if(args){
+//     resourcesFolder = args[0]
+// } else {
+    String resourcesFolder = project.properties['ressourceDirectoryLocation'].toString()
+
+ println "Using resource folder: ${resourcesFolder}"
+
+trainScheduleFileName =  "trainschedule.csv"
 
  zipFileName = "TREN2GTFS.zip"
  agency_id = 'TREN'
@@ -397,12 +404,12 @@ timezone = agency_timezone
 routes = []
 routes << routeTrenUrbano
 
- agencyFileName = "agency.txt"
- stopsFileName = "stops.txt"
- routesFileName = "routes.txt"
- tripsFileName = "trips.txt"
- stopTimesFileName = "stop_times.txt"
- calendarFileName = "calendar.txt"
+ String agencyFileName = "agency.txt"
+ String stopsFileName = "stops.txt"
+ String routesFileName = "routes.txt"
+ String tripsFileName = "trips.txt"
+ String stopTimesFileName = "stop_times.txt"
+ String calendarFileName = "calendar.txt"
 
  tren2gtfsFiles = [
          agencyFileName,
@@ -420,10 +427,10 @@ agency = new Agency(agencyId: agency_id,
                     agencyLang: agency_lang,
                     agencyPhone: agency_phone,
                     agencyFareUrl: agency_fare_url)
-createAgencyTxt(agency)
+createAgencyTxt(resourcesFolder, agencyFileName, agency)
 stopCollection = new StopCollection()
-createStopsTxt(stopCollection.getTheStops())
-createRoutesTxt(routes)
+createStopsTxt(resourcesFolder, stopsFileName, stopCollection.getTheStops())
+createRoutesTxt(resourcesFolder, routesFileName, routes)
 //def trips2 = new Trips2("${resourcesFolder}/output/${tripsFileName}", routes, StopCollection, dayTypes)
 //trips2.createTripsTxt()
 
@@ -440,10 +447,10 @@ def trips = new Trips("${resourcesFolder}/output/${tripsFileName}", retval.trips
 println "Creating ${tripsFileName}"
 trips.createTripsTxt()
 
-createCalendarTxt(calendar)
-createZipFile()
+createCalendarTxt(resourcesFolder, calendar)
+createZipFile(resourcesFolder)
 
-def createAgencyTxt(def agency){
+def createAgencyTxt(String resourcesFolder, String agencyFileName,  def agency){
     def agencyTxt = new File("${resourcesFolder}/output/${agencyFileName}")
     agencyTxt.newWriter()
     agencyTxt << ("agency_id,agency_name,agency_url,agency_timezone,agency_lang,agency_phone,agency_fare_url") << "\r\n"
@@ -460,7 +467,7 @@ def createAgencyTxt(def agency){
 
 }
 
-def createStopsTxt(def stops){
+def createStopsTxt(String resourcesFolder,  String stopsFileName, def stops){
     def stopsTxt = new File("${resourcesFolder}/output/${stopsFileName}")
     stopsTxt.newWriter()
     stopsTxt << ("stop_id,stop_code,stop_name,stop_desc,stop_lat,stop_lon,zone_id,stop_url,location_type,parent_station,stop_timezone,wheelchair_boarding") << "\r\n"
@@ -481,7 +488,7 @@ def createStopsTxt(def stops){
 
 }
 
-def createRoutesTxt(def routes){
+def createRoutesTxt(String resourcesFolder, String routesFileName, def routes){
     def routesTxt = new File ("${resourcesFolder}/output/${routesFileName}")
     routesTxt.newWriter()
     routesTxt << ("route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_url,route_color,route_text_color") << "\r\n"
@@ -516,7 +523,7 @@ def createStopTimesTxt(stopTimes){
 
 
 
-def createCalendarTxt(def calendar){
+def createCalendarTxt(String resourcesFolder, def calendar){
     def calendarTxt = new File("${resourcesFolder}/output/${calendarFileName}")
     calendarTxt.newWriter()
     calendarTxt << ("service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date") << "\r\n"
@@ -535,7 +542,7 @@ def createCalendarTxt(def calendar){
 
 }
 
-def createZipFile(){
+def createZipFile(String resourcesFolder){
     ZipOutputStream zipFile = new ZipOutputStream(new FileOutputStream("${resourcesFolder}/output/${zipFileName}"))
     tren2gtfsFiles.each() { fileName ->
         zipFile.putNextEntry(new ZipEntry(fileName))
