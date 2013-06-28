@@ -1,10 +1,5 @@
 package tren2gtfs
-//@Grab(
-//        group='joda-time',
-//        module='joda-time',
-//        version='2.2'
-//)
-//@GrabExclude('xml-apis:xml-apis')
+
 import org.joda.time.DateTimeZone
 import org.joda.time.DateTime
 
@@ -70,10 +65,10 @@ class Trip {
 
 class Trips {
     private def trips = []
-    private String tripsFileName
+    private String tripsFile
 
-    Trips(tripsFileName, trips){
-        this.tripsFileName = tripsFileName
+    Trips(tripsFile, trips){
+        this.tripsFile = tripsFile
         this.trips = trips
     }
 
@@ -90,7 +85,7 @@ class Trips {
             theFile << "\r\n"
 
         }
-        def tripsTxt = new File ("${tripsFileName}")
+        def tripsTxt = new File ("${tripsFile}")
         tripsTxt.newWriter()
 
         tripsTxt << ("route_id,service_id,trip_id,trip_headsign,trip_short_name,direction_id,block_id,shape_id,wheelchair_accessible") << '\r\n'
@@ -99,104 +94,6 @@ class Trips {
             printTrip.call(tripsTxt,t)
         }
     }
-
-}
-class Trips2 {
-    private def routes
-    private def stopCollection
-    private def dayTypes
-    private def trips = []
-    private String tripsFileName
-
-    Trips2(tripsFileName, routes, stopCollection, dayTypes){
-        this.routes = routes
-        this.stopCollection = stopCollection
-        this.dayTypes = dayTypes
-        this.tripsFileName = tripsFileName
-    }
-
-    def createTripsTxt(){
-        def printTrip = {theFile, trip ->
-            theFile << trip.routeId+","
-            theFile << trip.serviceId+","
-            theFile << trip.tripId+","
-            theFile << trip.tripHeadsign+","
-            theFile << trip.tripShortName+","
-            theFile << trip.directionId+","
-            theFile << trip.shapeId+","
-            theFile << trip.wheelchairAccessible+","
-            theFile << "\r\n"
-
-        }
-
-        int count = 0;
-        def stops = stopCollection.getTheStops();
-        for(int startId=1; startId<= stops.size(); startId++){
-            Stop theStart = stopCollection.getStopFromId(startId)
-            dayTypes.each {dayType ->
-                if(startId < stops.size()){
-                    for (int stopId=startId+1; stopId<=stops.size(); stopId++){
-                        Stop theStop = stopCollection.getStopFromId(stopId)
-                        Trip trip = new Trip();
-                        trip.startStop = theStart
-                        trip.endStop = theStop
-                        trip.routeId = ((Route) routes[0]).routeId
-                        trip.serviceId = dayType
-                        trip.tripId = "${++count}"
-                        trip.tripHeadsign = "TO_SAGRADO" // theStop.stopName
-                        trip.tripShortName = "${theStart.stopName} / ${theStop.stopName}"
-                        trip.directionId = "TO_SAGRADO"
-                        trip.blockId = ""
-                        trip.shapeId = ""
-                        trip.wheelchairAccessible = ""
-                        trips << trip
-                    }
-                }
-                if(startId > 1){
-                    for (int stopId = startId -1; stopId >=1; stopId--){
-                        Stop theStop = stopCollection.getStopFromId(stopId)
-                        Trip trip = new Trip();
-                        trip.startStop = theStart
-                        trip.endStop = theStop
-                        trip.routeId = ((Route) routes[0]).routeId
-                        trip.serviceId = dayType
-                        trip.tripId = "${++count}"
-                        trip.tripHeadsign = "TO_BAYAMON" // theStop.stopName
-                        trip.tripShortName = "${theStart.stopName} / ${theStop.stopName}"
-                        trip.directionId = "TO_BAYAMON"
-                        trip.blockId = ""
-                        trip.shapeId = ""
-                        trip.wheelchairAccessible = ""
-                        trips << trip
-                    }
-                }
-            }
-        }
-
-        def tripsTxt = new File ("${tripsFileName}")
-        tripsTxt.newWriter()
-
-        tripsTxt << ("route_id,service_id,trip_id,trip_headsign,trip_short_name,direction_id,block_id,shape_id,wheelchair_accessible") << '\r\n'
-
-        for(Trip t: trips){
-            printTrip.call(tripsTxt,t)
-        }
-        return trips
-    }
-
-    def getTheTrips(){
-        return trips
-    }
-
-    def findTrip(Stop startStopStation, Stop destinationStopStation, String daytype, String direction){
-        trips.find{Trip trip ->
-            if((trip.startStop.equals(startStopStation)) &&
-                    (trip.endStop.equals(destinationStopStation)) &&
-                    (trip.serviceId.toUpperCase() == daytype.toUpperCase()) &&
-                    (trip.directionId.toUpperCase() == direction.toUpperCase())
-            ) trip}
-    }
-
 
 }
 
@@ -252,7 +149,6 @@ class TrainLocalTime implements Comparable<TrainLocalTime> {
         }
     }
 
-    // HH:mm:ss
     String toString(String pattern="HH:mm:ss"){
 
         DateTime jdt = new DateTime(DateTimeZone.forID(trainLocalTimeZone));
@@ -411,18 +307,6 @@ class TrainSchedule {
                 def startStopStation = stopCollection.getStopFromId(startStationId)
                 for(int stopStationId = 1; stopStationId <= stops.size(); stopStationId++){
 
-//                    //For Testing
-//                    if(TrainGlobals.globals['debug']){
-//                        if(!(((direction == 'to_sagrado')&& (startStationId==1) && (stopStationId==16)) ||
-//                                ((direction == "to_bayamon") && (startStationId==16) && (stopStationId==1)))
-//                        )
-//                            continue;
-//                    }
-//                    if(TrainGlobals.globals['debug']){
-//                        if(!(((direction == 'to_sagrado')&& (startStationId==15) && (stopStationId==16)))
-//                        )
-//                            continue;
-//                    }
 
                     if((direction == 'to_sagrado' && (startStationId < stopStationId) ) ||
                             (direction == 'to_bayamon' && (startStationId > stopStationId))
@@ -433,12 +317,10 @@ class TrainSchedule {
                             if(TrainGlobals.globals['debug']){
                                 println ">>>>>>>"
                                 println "[${i++}]-${daytype}-(${direction}) From ${startStopStation.stopName}(${startStationId}) To ${destinationStopStation.stopName}(${stopStationId})"// leaving at ${leavingTime}"
-//                                    println "Leaves: ${leavingTime} and Arrives: ${arrivalTime}"
                                 println "<<<<<<<"
                             }
                             def leavingTimes = getStopTrainScheduleTimes(startStopStation, direction, daytype)
                             leavingTimes.each({ leavingTime ->
-                                //def arrivalTime = getStopTrainArrivalTime(startStationId, direction, leavingTime, stopStationId, daytype)
 
 
 
@@ -452,7 +334,6 @@ class TrainSchedule {
                                     StopTime stopTime = new StopTime(
                                             tripId: t.tripId.toString(),
                                             arrivalTime: sseq.arrivalTime.toString(),
-//                                            departureTime: leavingTime.toString(),
                                             departureTime: sseq.arrivalTime.toString(),
                                             stopId: sseq.stopId.toString(),
                                             stopSequence: sseq.stopSequence.toString()
@@ -481,8 +362,6 @@ class TrainSchedule {
         def destinationStopStation
 
         int tripNumber = numberOfglobalTrips+1
-//        def localTrips = []
-//        Trip trip
 
         startStopStation = stopCollection.getStopFromId(fromStationId)
         destinationStopStation = stopCollection.getStopFromId(toStationId)
@@ -517,24 +396,6 @@ class TrainSchedule {
             ]
             stopSequence << stopSequenceItem
 
-//            startStopStation = stopCollection.getStopFromId(fromStationId)
-//            destinationStopStation = stopCollection.getStopFromId(toStationId)
-//
-//            trip = new Trip(
-//                    startStop:  startStopStation,
-//                    endStop: destinationStopStation,
-//                    routeId: ((Route) routes[0]).routeId,
-//                    serviceId: daytype,
-//                    tripId: "${tripNumber++}",
-//                    tripHeadsign: direction.toUpperCase(),// theStop.stopName
-//                    tripShortName: "${startStopStation.stopName} / ${destinationStopStation.stopName}",
-//                    directionId: direction.toUpperCase(),
-//                    blockId: "",
-//                    shapeId: "",
-//                    wheelchairAccessible: ""
-//            );
-//            localTrips << trip
-
             int nextStation = fromStationId-1
             def nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
             def nextStationArrival = nextStationSchedule.find({
@@ -554,24 +415,6 @@ class TrainSchedule {
                         stopSequence: fromStationId - nextStation + 1
                 ]
                 stopSequence << stopSequenceItem
-
-//                startStopStation = stopCollection.getStopFromId(fromStationId)
-//                destinationStopStation = stopCollection.getStopFromId(nextStation)
-//
-//                trip = new Trip(
-//                        startStop:  startStopStation,
-//                        endStop: destinationStopStation,
-//                        routeId: ((Route) routes[0]).routeId,
-//                        serviceId: daytype,
-//                        tripId: "${tripNumber++}",
-//                        tripHeadsign: direction.toUpperCase(),// theStop.stopName
-//                        tripShortName: "${startStopStation.stopName} / ${destinationStopStation.stopName}",
-//                        directionId: direction.toUpperCase(),
-//                        blockId: "",
-//                        shapeId: "",
-//                        wheelchairAccessible: ""
-//                );
-//                localTrips << trip
 
                 while(nextStation>toStationId){
                     nextStation = nextStation - 1
@@ -593,23 +436,6 @@ class TrainSchedule {
                         ]
                         stopSequence << stopSequenceItem
 
-//                        startStopStation = stopCollection.getStopFromId(fromStationId)
-//                        destinationStopStation = stopCollection.getStopFromId(nextStation)
-//
-//                        trip = new Trip(
-//                                startStop:  startStopStation,
-//                                endStop: destinationStopStation,
-//                                routeId: ((Route) routes[0]).routeId,
-//                                serviceId: daytype,
-//                                tripId: "${tripNumber++}",
-//                                tripHeadsign: direction.toUpperCase(),// theStop.stopName
-//                                tripShortName: "${startStopStation.stopName} / ${destinationStopStation.stopName}",
-//                                directionId: direction.toUpperCase(),
-//                                blockId: "",
-//                                shapeId: "",
-//                                wheelchairAccessible: ""
-//                        );
-//                        localTrips << trip
                     }
                 }
                 return [stopSequence: stopSequence, trip: localTrip]
@@ -625,24 +451,6 @@ class TrainSchedule {
                     stopSequence: 1
             ]
             stopSequence << stopSequenceItem
-
-//            startStopStation = stopCollection.getStopFromId(fromStationId)
-//            destinationStopStation = stopCollection.getStopFromId(toStationId)
-//
-//            trip = new Trip(
-//                    startStop:  startStopStation,
-//                    endStop: destinationStopStation,
-//                    routeId: ((Route) routes[0]).routeId,
-//                    serviceId: daytype,
-//                    tripId: "${tripNumber++}",
-//                    tripHeadsign: direction.toUpperCase(),// theStop.stopName
-//                    tripShortName: "${startStopStation.stopName} / ${destinationStopStation.stopName}",
-//                    directionId: direction.toUpperCase(),
-//                    blockId: "",
-//                    shapeId: "",
-//                    wheelchairAccessible: ""
-//            );
-//            localTrips << trip
 
             int nextStation = fromStationId+1
             def nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
@@ -663,23 +471,6 @@ class TrainSchedule {
                 ]
                 stopSequence << stopSequenceItem
 
-//                startStopStation = stopCollection.getStopFromId(fromStationId)
-//                destinationStopStation = stopCollection.getStopFromId(nextStation)
-//
-//                trip = new Trip(
-//                        startStop:  startStopStation,
-//                        endStop: destinationStopStation,
-//                        routeId: ((Route) routes[0]).routeId,
-//                        serviceId: daytype,
-//                        tripId: "${tripNumber++}",
-//                        tripHeadsign: direction.toUpperCase(),// theStop.stopName
-//                        tripShortName: "${startStopStation.stopName} / ${destinationStopStation.stopName}",
-//                        directionId: direction.toUpperCase(),
-//                        blockId: "",
-//                        shapeId: "",
-//                        wheelchairAccessible: ""
-//                );
-//                localTrips << trip
             }
 
             while(nextStation<toStationId){
@@ -703,23 +494,6 @@ class TrainSchedule {
 
                     stopSequence << stopSequenceItem
 
-//                    startStopStation = stopCollection.getStopFromId(fromStationId)
-//                    destinationStopStation = stopCollection.getStopFromId(nextStation)
-//
-//                    trip = new Trip(
-//                            startStop:  startStopStation,
-//                            endStop: destinationStopStation,
-//                            routeId: ((Route) routes[0]).routeId,
-//                            serviceId: daytype,
-//                            tripId: "${tripNumber++}",
-//                            tripHeadsign: direction.toUpperCase(),// theStop.stopName
-//                            tripShortName: "${startStopStation.stopName} / ${destinationStopStation.stopName}",
-//                            directionId: direction.toUpperCase(),
-//                            blockId: "",
-//                            shapeId: "",
-//                            wheelchairAccessible: ""
-//                    );
-//                    localTrips << trip
                 }
             }
             return [stopSequence: stopSequence, trip: localTrip]
