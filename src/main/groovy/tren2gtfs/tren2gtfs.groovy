@@ -28,7 +28,7 @@ import org.joda.time.format.PeriodFormatter
 
  def resourcesFolderDir = new File(resourcesFolder)
 
- if(!resourcesFolderDir){
+ if(!(resourcesFolderDir.exists())){
     resourcesFolderDir.mkdir()
  }
 
