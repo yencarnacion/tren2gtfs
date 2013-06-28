@@ -20,13 +20,20 @@ following information:
 
 At the moment, the file contains the arrival times for the [Tren Urbano of Puerto Rico](http://en.wikipedia.org/wiki/Tren_Urbano).
 The program only generates the GTFS file for the Tren Urbano of Puerto Rico at the moment.  After the program is run you can find
-the TREN2GTFS.zip file in resources/output/TREN2GTFS.zip
+the TREN2GTFS.zip file in src/main/resources/output/TREN2GTFS.zip
 
+How to run
+=====
+To get this project working, perform the minimum steps in Maven:
+
+>$ mvn groovy:compile
+
+>$ mvn groovy:execute
 
 Validation
 =====
 
-You can validate the file in resources/output/TREN2GTFS.zip with https://code.google.com/p/googletransitdatafeed/wiki/FeedValidator
+You can validate the file in src/main/resources/output/TREN2GTFS.zip with https://code.google.com/p/googletransitdatafeed/wiki/FeedValidator
 
 Route Map
 =====
@@ -37,5 +44,5 @@ You can download a map of the Tren Urbano route area with the following command 
 Tren Urbano Schedule
 =====
 
-The file resources/input/trainschedule.csv was graciously provided by Victor Ramírez &lt;victor.ramirez@gmail.com&gt;.  Many thanks
+The file src/main/resources/input/trainschedule.csv was graciously provided by Victor Ramírez &lt;victor.ramirez@gmail.com&gt;.  Many thanks
 to him for the file and for the other Transit related to Puerto Rico work he is doing.
