@@ -13,18 +13,13 @@ import org.joda.time.format.PeriodFormatter
 
  agency_timezone = 'America/Puerto_Rico'
 
-//*TODO delete Yamir
-def localtraintime = new TrainLocalTime("00:11:11", 'America/Puerto_Rico')
-def st = true
-//TODO delete yamir
-
  startTime = new DateTime(DateTimeZone.forID(agency_timezone))
  // resourcesFolder = "src/main/resources"
 // resourcesFolder = ""
 // if(args){
 //     resourcesFolder = args[0]
 // } else {
-    String resourcesFolder = project.properties['ressourceDirectoryLocation'].toString()
+    String resourcesFolder = project.properties['ressourceDirectoryLocation']
 
  println "Using resource folder: ${resourcesFolder}"
 

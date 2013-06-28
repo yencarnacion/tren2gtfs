@@ -1,10 +1,10 @@
 package tren2gtfs
-@Grab(
-        group='joda-time',
-        module='joda-time',
-        version='2.2'
-)
-@GrabExclude('xml-apis:xml-apis')
+//@Grab(
+//        group='joda-time',
+//        module='joda-time',
+//        version='2.2'
+//)
+//@GrabExclude('xml-apis:xml-apis')
 import org.joda.time.DateTimeZone
 import org.joda.time.DateTime
 
@@ -310,7 +310,7 @@ class TrainLocalTime implements Comparable<TrainLocalTime> {
         return comparison
     }
 
-    boolean isAfter(TrainLocalTime o){
+    boolean LocalTrainTimeAfter(TrainLocalTime o){
         DateTime jdt = new DateTime(DateTimeZone.forID(trainLocalTimeZone));
         DateTime ljdt = new DateTime(
                 jdt.getYear(),
@@ -539,7 +539,7 @@ class TrainSchedule {
             def nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
             def nextStationArrival = nextStationSchedule.find({
                 try{
-                    if(it.isAfter(fromTrainTime)) it
+                    if(((TrainLocalTime) it).LocalTrainTimeAfter(fromTrainTime)) ((TrainLocalTime) it)
                 } catch (NullPointerException npe){
                     null
                 }
@@ -578,7 +578,7 @@ class TrainSchedule {
                     nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
                     nextStationArrival = nextStationSchedule.find({
                         try{
-                            if(it.isAfter(nextStationArrival)) it
+                            if(((TrainLocalTime) it).LocalTrainTimeAfter(nextStationArrival)) it
                         } catch (NullPointerException npe){
                             null
                         }
@@ -649,7 +649,7 @@ class TrainSchedule {
 
             def nextStationArrival = nextStationSchedule.find({
                 try{
-                    if(it.isAfter(fromTrainTime)) it
+                    if(((TrainLocalTime) it).LocalTrainTimeAfter(fromTrainTime)) it
                 } catch (NullPointerException npe){
                     null
                 }
@@ -687,7 +687,7 @@ class TrainSchedule {
                 nextStationSchedule = getStopTrainScheduleTimes(stopCollection.getStopFromId(nextStation), direction, daytype)
                 nextStationArrival = nextStationSchedule.find({
                     try{
-                        if(it.isAfter(nextStationArrival)) it
+                        if(((TrainLocalTime) it).LocalTrainTimeAfter(nextStationArrival)) ((TrainLocalTime) it)
                     } catch(NullPointerException npe){
                         null
                     }
@@ -737,7 +737,7 @@ class TrainSchedule {
                     trainArrival.direction.toUpperCase() == direction.toUpperCase() &&
                     trainArrival.daytype.toUpperCase() == daytype.toUpperCase() )
                 trainArrival
-        }).collect({new TrainLocalTime(it.arrivalTime, timeZone)}).sort()
+        }).collect({((TrainLocalTime) new TrainLocalTime(it.arrivalTime, timeZone))}).sort()
     }
 }
 
