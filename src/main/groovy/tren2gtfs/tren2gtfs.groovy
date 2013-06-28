@@ -437,7 +437,7 @@ createRoutesTxt(resourcesFolder, routesFileName, routes)
 def retval = new TrainSchedule("${resourcesFolder}/input/${trainScheduleFileName}", routes, stopCollection, timezone).getStopTimesAndTripsFromTrainArrivals()
 
 println "Creating ${stopTimesFileName}"
-createStopTimesTxt("${resourcesFolder}/input/${stopTimesFileName}", retval.stopTimes)
+createStopTimesTxt("${resourcesFolder}/output/${stopTimesFileName}", retval.stopTimes)
 
 def trips = new Trips("${resourcesFolder}/output/${tripsFileName}", retval.trips)
 
