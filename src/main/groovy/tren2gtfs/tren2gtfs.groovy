@@ -26,7 +26,13 @@ import org.joda.time.format.PeriodFormatter
 
  String resourcesFolder = project.properties['ressourceDirectoryLocation']
 
- agency_timezone = 'America/Puerto_Rico'
+ def resourcesFolderDir = new File(resourcesFolder)
+
+ if(!resourcesFolderDir){
+    resourcesFolderDir.mkdir()
+ }
+
+agency_timezone = 'America/Puerto_Rico'
 
  startTime = new DateTime(DateTimeZone.forID(agency_timezone))
 
