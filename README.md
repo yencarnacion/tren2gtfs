@@ -37,7 +37,7 @@ You can validate the file in src/main/resources/output/TREN2GTFS.zip with https:
 
 You can explore the feed on a map using https://code.google.com/p/googletransitdatafeed/wiki/ScheduleViewer
 
-Route Map
+Map of Route Area
 =====
 
 You can download a map of the Tren Urbano route area with the following command on Linux/OSX if you have curl:
