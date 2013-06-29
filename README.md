@@ -1,4 +1,4 @@
-tren2gtfs, a work in progress
+tren2gtfs, General Transit Feeed Specification File for the Tren Urbano
 =====
 
 tren2gtfs is copyrighted free software by Yamir Encarnación &lt;yencarnacion@webninjapr.com&gt;.
@@ -9,7 +9,7 @@ What it does
 =====
 
 tren2gtfs generates a [General Transit Feed Specification File](https://developers.google.com/transit/gtfs/reference)
-from a file graciously provided by Victor Ramírez &lt;victor.ramirez@gmail.com&gt;  which contains in csv format the
+from a file provided by Víctor Ramirez &lt;victor.ramirez@gmail.com&gt;  which contains in csv format the
 following information:
 
 
@@ -46,5 +46,5 @@ You can download a map of the Tren Urbano route area with the following command 
 Tren Urbano Schedule
 =====
 
-The file src/main/resources/input/trainschedule.csv was graciously provided by Victor Ramírez &lt;victor.ramirez@gmail.com&gt;.  Many thanks
+The file src/main/resources/input/trainschedule.csv was provided by Víctor Ramirez &lt;victor.ramirez@gmail.com&gt;.  Many thanks
 to him for the file and for the other Transit related to Puerto Rico work he is doing.
