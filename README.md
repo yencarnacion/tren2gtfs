@@ -35,6 +35,8 @@ Validation
 
 You can validate the file in src/main/resources/output/TREN2GTFS.zip with https://code.google.com/p/googletransitdatafeed/wiki/FeedValidator
 
+You can explore the feed on a map using https://code.google.com/p/googletransitdatafeed/wiki/ScheduleViewer
+
 Route Map
 =====
 
