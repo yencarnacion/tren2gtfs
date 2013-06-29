@@ -1,4 +1,4 @@
-tren2gtfs, General Transit Feeed Specification File for the Tren Urbano
+tren2gtfs, General Transit Feed Specification File for the Tren Urbano
 =====
 
 tren2gtfs is copyrighted free software by Yamir Encarnación &lt;yencarnacion@webninjapr.com&gt;.
