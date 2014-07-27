@@ -24,7 +24,7 @@ import org.joda.time.Period
 import org.joda.time.format.PeriodFormatterBuilder
 import org.joda.time.format.PeriodFormatter
 
- String resourcesFolder = project.properties['ressourceDirectoryLocation']
+ String resourcesFolder = args[0]
 
  def resourcesFolderDir = new File("${resourcesFolder}/output")
 

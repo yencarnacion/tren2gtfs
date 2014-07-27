@@ -315,9 +315,29 @@ class TrainSchedule {
         def trips = []
         int i=1;
         for (String direction: directions) {
-            for(int startStationId = 1; startStationId <= stops.size(); startStationId++){
+
+	    int startStationId 
+	    if(direction == 'to_sagrado'){
+		startStationId = 1
+	    } else {
+		startStationId = stops.size()
+	    }
+
+	    // Commented out looping over all stations	    	
+	    //for(int startStationId = 1; startStationId <= stops.size(); startStationId++){
                 def startStopStation = stopCollection.getStopFromId(startStationId)
-                for(int stopStationId = 1; stopStationId <= stops.size(); stopStationId++){
+
+                int stopStationId=stops.size()
+
+		if(direction == 'to_sagrado'){
+		   stopStationId = stops.size()
+	        } else {
+		   stopStationId = 1
+	        }
+
+		// Commented out looping over all stations
+		//for(int stopStationId = 1; stopStationId <= stops.size(); stopStationId++)
+		//{
 
 
                     if((direction == 'to_sagrado' && (startStationId < stopStationId) ) ||
@@ -357,11 +377,11 @@ class TrainSchedule {
                                     }
                                 }
 
-                            })
+                            }) // leavingTimes.each
                         })
                     }
-                }
-            }
+                //}
+            //}
         }
         return [stopTimes: stopTimes, trips: trips]
     }

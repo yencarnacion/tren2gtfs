@@ -1,0 +1,33 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'groovy'
+
+group = 'tren2gtfs'
+version = '1.0-SNAPSHOT'
+
+description = """tren2gtfs Project"""
+
+defaultTasks 'tren2gtfs'
+
+repositories {
+        
+     maven { url "http://repo.maven.apache.org/maven2" }
+}
+
+dependencies {
+    compile group: 'joda-time', name: 'joda-time', version:'2.2'
+    compile group: 'org.codehaus.groovy', name: 'groovy-all', version:'2.0.8'
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.0'
+}
+
+task tren2gtfs (dependsOn: 'classes', type: JavaExec) {
+    println "running tren2gtfs ${projectDir}/src/main/resources/"
+    main = 'tren2gtfs.tren2gtfs'
+    classpath = sourceSets.main.runtimeClasspath
+    List<String> list = new ArrayList<String>()
+    list.add("${projectDir}/src/main/resources/")
+    args = list
+}
