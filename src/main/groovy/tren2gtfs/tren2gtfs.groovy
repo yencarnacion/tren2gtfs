@@ -368,8 +368,8 @@ low_season_workday = new CalendarItem(
          friday: 1,
          saturday: 0,
          sunday: 0,
-         startDate: '20140601',
-         endDate: '20140731'
+         startDate: '20190601',
+         endDate: '20190731'
 )
 
 calendar << low_season_workday
@@ -383,8 +383,8 @@ restday = new CalendarItem(
         friday: 0,
         saturday: 1,
         sunday: 1,
-        startDate: '20140101',
-        endDate: '20141231'
+        startDate: '20190101',
+        endDate: '20191231'
 )
 
 calendar << restday
@@ -398,8 +398,8 @@ workday = new CalendarItem(
         friday: 1,
         saturday: 0,
         sunday: 0,
-        startDate: '20140801',
-        endDate: '20141231'
+        startDate: '20190801',
+        endDate: '20191231'
 )
 
 calendar << workday

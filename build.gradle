@@ -19,10 +19,6 @@ dependencies {
     compile group: 'org.codehaus.groovy', name: 'groovy-all', version:'2.0.8'
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.0'
-}
-
 task tren2gtfs (dependsOn: 'classes', type: JavaExec) {
     println "running tren2gtfs ${projectDir}/src/main/resources/"
     main = 'tren2gtfs.tren2gtfs'
